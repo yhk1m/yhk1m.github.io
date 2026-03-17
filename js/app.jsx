@@ -30,6 +30,7 @@ function Nav({ page, setPage, dark, setDark, section, setSection, lang }) {
     { id:'dashboard', label:'대시보드', icon:'📊' },
     { id:'tools', label:'도구함', icon:'🛠️' },
     { id:'diary', label:'일기', icon:'📝' },
+    { id:'write', label:'글쓰기', icon:'✍️' },
   ];
 
   return (
@@ -54,6 +55,11 @@ function Nav({ page, setPage, dark, setDark, section, setSection, lang }) {
             <a className="lang-toggle" href={lang === 'ko' ? 'en/' : '../'}>
               {lang === 'ko' ? 'EN' : 'KR'}
             </a>
+          )}
+          {section === 'private' && (
+            <button className="lang-toggle" onClick={() => { setSection('public'); setPage('portfolio'); setOpen(false); }}>
+              PUBLIC
+            </button>
           )}
           <button className="theme-toggle" onClick={() => setDark(!dark)}>{dark ? '☀️' : '🌙'}</button>
           {section === 'private' && (
@@ -377,17 +383,9 @@ const TEXTS = {
       { type:'Open Source', icon:'💻', title:'오픈소스 기여', desc:'커뮤니티와 함께 성장하는 개발' },
     ],
     filterAll: '전체',
-    board: [
-      { id:1, cat:'프로그램', title:'Personal Hub', desc:'스케줄링, 포트폴리오, 도구함을 통합한 개인 웹 플랫폼. React 기반 SPA.', date:'2026-03' },
-      { id:2, cat:'프로그램', title:'eGIS - 교육용 GIS', desc:'OpenLayers 기반 교육용 GIS 웹 애플리케이션. 공간 분석, 데이터 시각화, GeoTIFF 지원.', date:'2024-12' },
-      { id:3, cat:'프로그램', title:'Geolgo - 한국지리올림피아드', desc:'Next.js 기반 한국지리올림피아드 시스템. ECharts 시각화, PDF/Excel 출력.', date:'2025-06' },
-      { id:4, cat:'프로그램', title:'통사랑 - 사회 기출문제 검색', desc:'사회 과목 기출문제를 검색하고 PDF로 출력할 수 있는 도구.', date:'2025-03' },
-      { id:5, cat:'프로그램', title:'Classroom Manager', desc:'React 기반 교실 관리 도구. 좌석 배치, 드래그 앤 드롭, 학생 관리.', date:'2025-04' },
-      { id:6, cat:'프로그램', title:'Geotester', desc:'Leaflet 기반 지리 테스트 및 매핑 도구. Chart.js 시각화 포함.', date:'2025-08' },
-      { id:7, cat:'프로그램', title:'진도표 관리 시스템', desc:'Electron 기반 데스크톱 앱. SQL.js 로컬 DB로 진도 관리.', date:'2025-02' },
-      { id:8, cat:'글', title:'GIS 데이터 처리 가이드', desc:'DEM, Slope, Aspect 등 지형 분석 기법에 대한 실전 가이드.', date:'2024-09' },
-      { id:9, cat:'글', title:'Python 자동화 PPT 생성', desc:'python-pptx를 활용한 프레젠테이션 자동 생성 방법론.', date:'2025-01' },
-    ],
+    boardBack: '← 목록으로',
+    boardTech: '기술 스택',
+    boardLoading: '불러오는 중...',
   },
   en: {
     hero: { line1:"Hello, I'm", name:'Yonghyun Kim', line2:'',
@@ -412,17 +410,9 @@ const TEXTS = {
       { type:'Open Source', icon:'💻', title:'Open Source', desc:'Growing together with the community' },
     ],
     filterAll: 'All',
-    board: [
-      { id:1, cat:'Program', title:'Personal Hub', desc:'Integrated personal web platform with scheduling, portfolio, and productivity tools. React SPA.', date:'2026-03' },
-      { id:2, cat:'Program', title:'eGIS - Educational GIS', desc:'OpenLayers-based educational GIS web app. Spatial analysis, data visualization, GeoTIFF support.', date:'2024-12' },
-      { id:3, cat:'Program', title:'Geolgo - Geography Olympiad', desc:'Next.js-based Korean Geography Olympiad system. ECharts visualization, PDF/Excel export.', date:'2025-06' },
-      { id:4, cat:'Program', title:'Tongsarang - Exam Search', desc:'Social studies past exam question search tool with PDF export.', date:'2025-03' },
-      { id:5, cat:'Program', title:'Classroom Manager', desc:'React-based classroom management tool. Seating arrangement, drag & drop, student management.', date:'2025-04' },
-      { id:6, cat:'Program', title:'Geotester', desc:'Leaflet-based geographic testing and mapping tool with Chart.js visualization.', date:'2025-08' },
-      { id:7, cat:'Program', title:'Progress Tracker', desc:'Electron desktop app using SQL.js for local database-driven progress management.', date:'2025-02' },
-      { id:8, cat:'Article', title:'GIS Data Processing Guide', desc:'Practical guide on terrain analysis techniques including DEM, Slope, and Aspect.', date:'2024-09' },
-      { id:9, cat:'Article', title:'Python Automated PPT Generation', desc:'How to automatically generate presentations using python-pptx.', date:'2025-01' },
-    ],
+    boardBack: '← Back to list',
+    boardTech: 'Tech Stack',
+    boardLoading: 'Loading...',
   },
 };
 
@@ -460,12 +450,101 @@ function VisitorCounter() {
   );
 }
 
+// ===== Posts Loader =====
+const postsBase = window.HUB_LANG === 'en' ? '../posts/' : 'posts/';
+
+function usePosts(lang) {
+  const [posts, setPosts] = useState([]);
+  useEffect(() => {
+    fetch(postsBase + 'index.json')
+      .then(r => r.json())
+      .then(data => {
+        const mapped = data.map(p => ({
+          id: p.id,
+          cat: p.cat[lang] || p.cat['ko'],
+          title: p.title[lang] || p.title['ko'],
+          desc: p.desc[lang] || p.desc['ko'],
+          date: p.date,
+          file: p.file,
+          tech: p.tech || [],
+          links: p.links || [],
+        }));
+        setPosts(mapped);
+      })
+      .catch(() => {});
+  }, [lang]);
+  return posts;
+}
+
+// ===== Board Detail Component =====
+function BoardDetail({ item, onBack, texts }) {
+  const [html, setHtml] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!item.file) { setLoading(false); return; }
+    fetch(postsBase + item.file)
+      .then(r => r.text())
+      .then(md => {
+        setHtml(marked.parse(md));
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [item.file]);
+
+  return (
+    <div className="fade-in">
+      <button className="btn btn-ghost mb-md" onClick={onBack}>{texts.boardBack}</button>
+      <div className="card">
+        <div className="card-body">
+          <div className="board-detail-header">
+            <span className="badge">{item.cat}</span>
+            <span className="board-item-date">{item.date}</span>
+          </div>
+          <h1 className="board-detail-title">{item.title}</h1>
+          <p className="board-detail-desc">{item.desc}</p>
+
+          {item.links && item.links.length > 0 && (
+            <div className="board-detail-links">
+              {item.links.map((link, i) => (
+                <a key={i} className="btn btn-sm" href={link.url} target="_blank" rel="noopener noreferrer" style={{borderBottom:'none'}}>{link.label} →</a>
+              ))}
+            </div>
+          )}
+
+          {item.tech && item.tech.length > 0 && (
+            <div className="board-detail-section">
+              <h3 className="board-detail-section-title">{texts.boardTech}</h3>
+              <div className="skill-tags">
+                {item.tech.map(t => <span key={t} className="skill-tag">{t}</span>)}
+              </div>
+            </div>
+          )}
+
+          <div className="board-detail-content">
+            {loading
+              ? <p className="text-muted">{texts.boardLoading}</p>
+              : <div className="markdown-body" dangerouslySetInnerHTML={{ __html: html }} />
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ===== Board Component =====
-function Board({ items, filterAll }) {
+function Board({ items, filterAll, texts }) {
   const [filter, setFilter] = useState('all');
+  const [selectedId, setSelectedId] = useState(null);
   const categories = [...new Set(items.map(i => i.cat))];
   const filtered = filter === 'all' ? items : items.filter(i => i.cat === filter);
   const sorted = [...filtered].sort((a, b) => b.date.localeCompare(a.date));
+
+  const selectedItem = items.find(i => i.id === selectedId);
+  if (selectedItem) {
+    return <BoardDetail item={selectedItem} onBack={() => setSelectedId(null)} texts={texts} />;
+  }
 
   return (
     <div className="fade-in">
@@ -481,7 +560,7 @@ function Board({ items, filterAll }) {
       </div>
       <div className="board-list">
         {sorted.map(item => (
-          <div key={item.id} className="board-item">
+          <div key={item.id} className="board-item board-item-clickable" onClick={() => setSelectedId(item.id)}>
             <div className="board-item-header">
               <span className="badge">{item.cat}</span>
               <span className="board-item-date">{item.date}</span>
@@ -500,6 +579,7 @@ function Board({ items, filterAll }) {
 function Portfolio({ lang = 'ko' }) {
   const [tab, setTab] = useState('about');
   const t = TEXTS[lang];
+  const posts = usePosts(lang);
 
   return (
     <div className="page container portfolio">
@@ -560,7 +640,7 @@ function Portfolio({ lang = 'ko' }) {
         </div>
       )}
 
-      {tab === 'board' && <Board items={t.board} filterAll={t.filterAll} />}
+      {tab === 'board' && <Board items={posts} filterAll={t.filterAll} texts={t} />}
     </div>
   );
 }
@@ -939,6 +1019,354 @@ function Diary() {
   );
 }
 
+// ===== Post Editor =====
+function PostEditor() {
+  const [token, setToken] = useStore('gh_token', '');
+  const [showToken, setShowToken] = useState(false);
+  const [tokenInput, setTokenInput] = useState('');
+
+  const emptyForm = { title:'', cat:'프로그램', date: today(), desc:'', tech:'', body:'', links:'' };
+  const [form, setForm] = useState(emptyForm);
+  const [preview, setPreview] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [message, setMessage] = useState(null);
+
+  // Load existing posts for management
+  const [posts, setPosts] = useState([]);
+  const [editingId, setEditingId] = useState(null);
+
+  const loadPosts = useCallback(() => {
+    fetch(postsBase + 'index.json')
+      .then(r => r.json())
+      .then(setPosts)
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => { loadPosts(); }, [loadPosts]);
+
+  const saveToken = () => {
+    setToken(tokenInput);
+    setTokenInput('');
+    setShowToken(false);
+    setMessage({ type:'success', text:'GitHub 토큰이 저장되었습니다.' });
+  };
+
+  const generateFilename = () => {
+    const slug = form.title.toLowerCase()
+      .replace(/[가-힣]+/g, m => m)
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9가-힣\-]/g, '')
+      .slice(0, 40);
+    return `${form.date.slice(0,7)}-${slug || 'untitled'}.md`;
+  };
+
+  const ghApi = async (path, method, body) => {
+    const res = await fetch(`https://api.github.com/repos/yhk1m/yhk1m.github.io/contents/${path}`, {
+      method,
+      headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    return res;
+  };
+
+  const getFileSha = async (path) => {
+    const res = await fetch(`https://api.github.com/repos/yhk1m/yhk1m.github.io/contents/${path}`, {
+      headers: { 'Authorization': `token ${token}` },
+    });
+    if (res.ok) { const data = await res.json(); return data.sha; }
+    return null;
+  };
+
+  const publish = async () => {
+    if (!token) { setMessage({ type:'error', text:'GitHub 토큰을 먼저 설정해주세요.' }); return; }
+    if (!form.title || !form.body) { setMessage({ type:'error', text:'제목과 본문을 입력해주세요.' }); return; }
+
+    setPublishing(true);
+    setMessage(null);
+
+    try {
+      const filename = generateFilename();
+      const mdContent = form.body;
+
+      // 1. Upload markdown file
+      const mdPath = `posts/${filename}`;
+      const mdSha = await getFileSha(mdPath);
+      const mdBody = {
+        message: `Add post: ${form.title}`,
+        content: btoa(unescape(encodeURIComponent(mdContent))),
+      };
+      if (mdSha) mdBody.sha = mdSha;
+      const mdRes = await ghApi(mdPath, 'PUT', mdBody);
+      if (!mdRes.ok) throw new Error('마크다운 파일 업로드 실패');
+
+      // 2. Update index.json
+      const indexSha = await getFileSha('posts/index.json');
+      let indexData = [];
+      try {
+        const r = await fetch(`https://api.github.com/repos/yhk1m/yhk1m.github.io/contents/posts/index.json`, {
+          headers: { 'Authorization': `token ${token}` },
+        });
+        const d = await r.json();
+        indexData = JSON.parse(decodeURIComponent(escape(atob(d.content.replace(/\n/g, '')))));
+      } catch {}
+
+      const techArr = form.tech ? form.tech.split(',').map(t => t.trim()).filter(Boolean) : [];
+      const linksArr = form.links ? form.links.split('\n').map(l => {
+        const [label, url] = l.split('|').map(s => s.trim());
+        return label && url ? { label, url } : null;
+      }).filter(Boolean) : [];
+
+      const newEntry = {
+        id: editingId || Date.now(),
+        cat: { ko: form.cat, en: form.cat === '프로그램' ? 'Program' : 'Article' },
+        title: { ko: form.title, en: form.title },
+        desc: { ko: form.desc, en: form.desc },
+        date: form.date.slice(0, 7),
+        file: filename,
+      };
+      if (techArr.length) newEntry.tech = techArr;
+      if (linksArr.length) newEntry.links = linksArr;
+
+      if (editingId) {
+        const idx = indexData.findIndex(p => p.id === editingId);
+        if (idx >= 0) indexData[idx] = newEntry;
+        else indexData.push(newEntry);
+      } else {
+        indexData.push(newEntry);
+      }
+
+      const indexBody = {
+        message: `Update index: ${form.title}`,
+        content: btoa(unescape(encodeURIComponent(JSON.stringify(indexData, null, 2)))),
+      };
+      if (indexSha) indexBody.sha = indexSha;
+      const indexRes = await ghApi('posts/index.json', 'PUT', indexBody);
+      if (!indexRes.ok) throw new Error('index.json 업데이트 실패');
+
+      setMessage({ type:'success', text: `"${form.title}" 게시 완료! 1-2분 후 사이트에 반영됩니다.` });
+      setForm(emptyForm);
+      setEditingId(null);
+      loadPosts();
+    } catch (err) {
+      setMessage({ type:'error', text: err.message });
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  const editPost = async (post) => {
+    setEditingId(post.id);
+    setForm({
+      title: post.title?.ko || post.title,
+      cat: post.cat?.ko || post.cat,
+      date: post.date + (post.date.length === 7 ? '-01' : ''),
+      desc: post.desc?.ko || post.desc,
+      tech: (post.tech || []).join(', '),
+      links: (post.links || []).map(l => `${l.label}|${l.url}`).join('\n'),
+      body: '',
+    });
+    // Load existing markdown
+    if (post.file) {
+      try {
+        const r = await fetch(postsBase + post.file);
+        const text = await r.text();
+        setForm(prev => ({ ...prev, body: text }));
+      } catch {}
+    }
+    setPreview(false);
+  };
+
+  const deletePost = async (post) => {
+    if (!token) { setMessage({ type:'error', text:'GitHub 토큰을 먼저 설정해주세요.' }); return; }
+    if (!confirm(`"${post.title?.ko || post.title}" 을(를) 삭제하시겠습니까?`)) return;
+
+    setPublishing(true);
+    try {
+      // Delete md file
+      if (post.file) {
+        const sha = await getFileSha(`posts/${post.file}`);
+        if (sha) {
+          await ghApi(`posts/${post.file}`, 'DELETE', {
+            message: `Delete post: ${post.title?.ko}`,
+            sha,
+          });
+        }
+      }
+      // Update index.json
+      const indexSha = await getFileSha('posts/index.json');
+      const r = await fetch(`https://api.github.com/repos/yhk1m/yhk1m.github.io/contents/posts/index.json`, {
+        headers: { 'Authorization': `token ${token}` },
+      });
+      const d = await r.json();
+      let indexData = JSON.parse(decodeURIComponent(escape(atob(d.content.replace(/\n/g, '')))));
+      indexData = indexData.filter(p => p.id !== post.id);
+
+      await ghApi('posts/index.json', 'PUT', {
+        message: `Delete from index: ${post.title?.ko}`,
+        content: btoa(unescape(encodeURIComponent(JSON.stringify(indexData, null, 2)))),
+        sha: indexSha,
+      });
+
+      setMessage({ type:'success', text:'삭제 완료!' });
+      loadPosts();
+    } catch (err) {
+      setMessage({ type:'error', text: err.message });
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  const loadTemplate = async () => {
+    try {
+      const r = await fetch(postsBase + '_template.md');
+      const text = await r.text();
+      setForm(prev => ({ ...prev, body: text }));
+    } catch {}
+  };
+
+  return (
+    <div className="page container">
+      <div className="page-header flex-between">
+        <div>
+          <h1 className="page-title">{editingId ? '글 수정' : '글쓰기'}</h1>
+          <p className="text-muted text-sm">마크다운으로 작성하고 GitHub Pages에 바로 게시합니다</p>
+        </div>
+        <div className="flex gap-sm">
+          <button className="btn btn-sm" onClick={() => setShowToken(!showToken)}>
+            {token ? '🔑 토큰 변경' : '🔑 토큰 설정'}
+          </button>
+        </div>
+      </div>
+
+      {showToken && (
+        <div className="card mb-md fade-in">
+          <div className="card-body">
+            <p className="text-sm text-muted mb-sm">
+              GitHub Personal Access Token (repo 권한 필요).
+              Settings → Developer settings → Personal access tokens → Fine-grained tokens에서 발급하세요.
+            </p>
+            <div className="input-row">
+              <input className="input" type="password" placeholder="ghp_xxxxxxxxxxxx"
+                value={tokenInput} onChange={e => setTokenInput(e.target.value)} />
+              <button className="btn btn-primary" onClick={saveToken}>저장</button>
+            </div>
+            {token && <p className="text-sm mt-sm" style={{color:'var(--text-muted)'}}>현재 토큰: {token.slice(0,8)}...</p>}
+          </div>
+        </div>
+      )}
+
+      {message && (
+        <div className={`card mb-md fade-in`} style={{
+          borderLeft: `3px solid ${message.type === 'error' ? '#c81e1e' : 'var(--text)'}`,
+          background: message.type === 'error' ? 'rgba(200,30,30,0.04)' : 'var(--accent-light)',
+        }}>
+          <div className="card-body">
+            <p className="text-sm">{message.text}</p>
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-2">
+        <div>
+          {/* Metadata */}
+          <div className="card mb-md">
+            <div className="card-header"><h3 className="card-title">📋 기본 정보</h3></div>
+            <div className="card-body">
+              <input className="input mb-sm" placeholder="제목" value={form.title}
+                onChange={e => setForm({...form, title:e.target.value})} />
+              <div className="input-row mb-sm">
+                <select className="select" value={form.cat} onChange={e => setForm({...form, cat:e.target.value})}>
+                  <option value="프로그램">프로그램</option>
+                  <option value="글">글</option>
+                </select>
+                <input className="input" type="date" value={form.date}
+                  onChange={e => setForm({...form, date:e.target.value})} />
+              </div>
+              <textarea className="textarea mb-sm" rows={2} placeholder="한 줄 설명"
+                value={form.desc} onChange={e => setForm({...form, desc:e.target.value})} />
+              <input className="input mb-sm" placeholder="기술 스택 (쉼표로 구분: React, Node.js, ...)"
+                value={form.tech} onChange={e => setForm({...form, tech:e.target.value})} />
+              <textarea className="textarea" rows={2}
+                placeholder={"링크 (줄바꿈으로 구분)\nGitHub|https://github.com/...\nLive|https://..."}
+                value={form.links} onChange={e => setForm({...form, links:e.target.value})} />
+            </div>
+          </div>
+
+          {/* Editor */}
+          <div className="card">
+            <div className="card-header">
+              <h3 className="card-title">📝 본문 (마크다운)</h3>
+              <div className="flex gap-sm">
+                <button className="btn btn-sm btn-ghost" onClick={loadTemplate}>템플릿 불러오기</button>
+                <button className={`btn btn-sm ${preview?'btn-primary':''}`}
+                  onClick={() => setPreview(!preview)}>
+                  {preview ? '편집' : '미리보기'}
+                </button>
+              </div>
+            </div>
+            <div className="card-body">
+              {preview ? (
+                <div className="markdown-body board-detail-content"
+                  dangerouslySetInnerHTML={{ __html: marked.parse(form.body || '') }} />
+              ) : (
+                <textarea className="textarea post-editor-body" rows={20}
+                  placeholder="마크다운으로 작성하세요..."
+                  value={form.body} onChange={e => setForm({...form, body:e.target.value})} />
+              )}
+            </div>
+          </div>
+
+          <div className="flex gap-sm mt-md" style={{justifyContent:'flex-end'}}>
+            {editingId && (
+              <button className="btn" onClick={() => { setForm(emptyForm); setEditingId(null); }}>
+                취소
+              </button>
+            )}
+            <button className="btn btn-primary" onClick={publish} disabled={publishing}>
+              {publishing ? '게시 중...' : editingId ? '수정 게시' : '게시하기'}
+            </button>
+          </div>
+        </div>
+
+        {/* Post List */}
+        <div>
+          <div className="card">
+            <div className="card-header">
+              <h3 className="card-title">📂 게시물 관리</h3>
+              <span className="badge">{posts.length}개</span>
+            </div>
+            <div className="card-body">
+              {posts.length === 0 && (
+                <div className="empty-state">
+                  <div className="empty-state-icon">📄</div>
+                  <div className="empty-state-text">아직 게시물이 없습니다</div>
+                </div>
+              )}
+              {[...posts].sort((a,b) => b.date.localeCompare(a.date)).map(post => (
+                <div key={post.id} className="post-manage-item">
+                  <div style={{flex:1, minWidth:0}}>
+                    <div className="flex gap-sm" style={{alignItems:'center', marginBottom:4}}>
+                      <span className="badge">{post.cat?.ko || post.cat}</span>
+                      <span className="text-sm text-muted">{post.date}</span>
+                    </div>
+                    <div className="text-sm text-bold" style={{overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>
+                      {post.title?.ko || post.title}
+                    </div>
+                  </div>
+                  <div className="flex gap-xs" style={{flexShrink:0}}>
+                    <button className="btn btn-icon btn-sm" onClick={() => editPost(post)} title="수정">✏️</button>
+                    <button className="btn btn-icon btn-sm btn-danger" onClick={() => deletePost(post)} title="삭제">🗑️</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ===== Footer =====
 function Footer({ lang = 'ko' }) {
   return (
@@ -978,7 +1406,7 @@ function App() {
       const hash = location.hash.slice(1);
       if (hash === 'private') { setSection('private'); setPage('dashboard'); return; }
       const publicPages = ['portfolio'];
-      const privatePages = ['dashboard', 'tools', 'diary'];
+      const privatePages = ['dashboard', 'tools', 'diary', 'write'];
       if (publicPages.includes(hash)) { setSection('public'); setPage(hash); }
       else if (privatePages.includes(hash)) { setSection('private'); setPage(hash); }
     };
@@ -995,6 +1423,7 @@ function App() {
       case 'dashboard': return <Dashboard />;
       case 'tools': return <Tools />;
       case 'diary': return <Diary />;
+      case 'write': return <PostEditor />;
       default: return <Portfolio lang={lang} />;
     }
   };
