@@ -584,18 +584,22 @@ function Portfolio({ lang = 'ko' }) {
   return (
     <div className="page container portfolio">
       <div className="hero slide-up">
-        <div className="hero-content">
-          <h1 className="hero-title">{t.hero.line1}<br/><span>{t.hero.name}</span>{t.hero.line2}</h1>
-          <p className="hero-subtitle">{t.hero.subtitle.split('\n').map((line, i) =>
-            <React.Fragment key={i}>{line}<br/></React.Fragment>
-          )}</p>
-          <div className="hero-links">
-            <a className="btn btn-primary" href="#" target="_blank" style={{borderBottom:'none'}}>YouTube →</a>
-            <a className="btn" href="#" target="_blank" style={{borderBottom:'none'}}>Blog →</a>
-            <a className="btn" href="#" target="_blank" style={{borderBottom:'none'}}>GitHub →</a>
+        <div className="hero-row">
+          <div className="hero-cell hero-cell-name">
+            <h1 className="hero-title">{t.hero.line1} <span>{t.hero.name}</span>{t.hero.line2}</h1>
+          </div>
+          <div className="hero-cell hero-cell-desc">
+            <p className="hero-subtitle">{t.hero.subtitle.split('\n').map((line, i) =>
+              <React.Fragment key={i}>{line}{i === 0 && <br/>}</React.Fragment>
+            )}</p>
+          </div>
+          <div className="hero-cell hero-cell-links">
+            <a className="btn btn-primary" href="#" target="_blank" style={{borderBottom:'none'}}>YouTube</a>
+            <a className="btn" href="#" target="_blank" style={{borderBottom:'none'}}>Blog</a>
+            <a className="btn" href="#" target="_blank" style={{borderBottom:'none'}}>GitHub</a>
           </div>
         </div>
-        <div className="hero-aside">
+        <div className="hero-bar">
           <div className="hero-tabs">
             {[{id:'about',label:t.tabs.about},{id:'timeline',label:t.tabs.timeline},{id:'board',label:t.tabs.board}].map(tb => (
               <button key={tb.id} className={`hero-tab ${tab===tb.id?'active':''}`} onClick={()=>setTab(tb.id)}>{tb.label}</button>
