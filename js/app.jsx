@@ -947,20 +947,32 @@ function Tools() {
 
 // ===== PDF Library Page =====
 function PdfLibrary() {
+  const [token] = useStore('gh_token', '');
   const [folders, setFolders] = useStore('pdf_folders', []);
   const [pdfs, setPdfs] = useStore('pdfs', []);
+  const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState(null);
   const [viewing, setViewing] = useState(null);
   const [currentFolder, setCurrentFolder] = useState(null);
-  const [form, setForm] = useState({ name:'', url:'' });
   const [newFolderName, setNewFolderName] = useState('');
   const [showNewFolder, setShowNewFolder] = useState(false);
+  const fileRef = useRef(null);
 
-  const parseGdriveUrl = (url) => {
-    const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-    if (match) return `https://drive.google.com/file/d/${match[1]}/preview`;
-    if (url.includes('drive.google.com')) return url;
-    return url;
+  const ghApiPdf = async (path, method, body) => {
+    const res = await fetch(`https://api.github.com/repos/yhk1m/yhk1m.github.io/contents/${path}`, {
+      method,
+      headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    return res;
+  };
+
+  const getFileSha = async (path) => {
+    const res = await fetch(`https://api.github.com/repos/yhk1m/yhk1m.github.io/contents/${path}`, {
+      headers: { 'Authorization': `token ${token}` },
+    });
+    if (res.ok) { const data = await res.json(); return data.sha; }
+    return null;
   };
 
   const addFolder = () => {
@@ -989,24 +1001,61 @@ function PdfLibrary() {
     setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, name: newName.trim() } : f));
   };
 
-  const addPdf = () => {
-    if (!form.name || !form.url) { setMessage({ type:'error', text:'이름과 링크를 모두 입력해주세요.' }); return; }
-    const embedUrl = parseGdriveUrl(form.url);
-    const newPdf = {
-      id: Date.now(),
-      name: form.name,
-      url: form.url,
-      embedUrl,
-      folderId: currentFolder?.id || null,
-      date: today(),
-    };
-    setPdfs(prev => [newPdf, ...prev]);
-    setForm({ name:'', url:'' });
-    setMessage({ type:'success', text:`"${form.name}" 등록 완료!` });
+  const handleUpload = async () => {
+    if (!token) { setMessage({ type:'error', text:'GitHub 토큰을 먼저 설정해주세요. (글쓰기 페이지에서 설정)' }); return; }
+    const file = fileRef.current?.files?.[0];
+    if (!file) { setMessage({ type:'error', text:'파일을 선택해주세요.' }); return; }
+    if (!file.name.endsWith('.pdf')) { setMessage({ type:'error', text:'PDF 파일만 업로드 가능합니다.' }); return; }
+    if (file.size > 25 * 1024 * 1024) { setMessage({ type:'error', text:'25MB 이하 파일만 업로드 가능합니다.' }); return; }
+
+    setUploading(true);
+    setMessage(null);
+
+    try {
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      const safeName = file.name.replace(/[^a-zA-Z0-9가-힣._\-]/g, '_');
+      const path = `pdfs/${Date.now()}_${safeName}`;
+      const sha = await getFileSha(path);
+      const body = { message: `Upload PDF: ${safeName}`, content: base64 };
+      if (sha) body.sha = sha;
+
+      const res = await ghApiPdf(path, 'PUT', body);
+      if (!res.ok) throw new Error('업로드 실패');
+
+      const url = `https://yhk1m.github.io/${path}`;
+      const newPdf = {
+        id: Date.now(),
+        name: file.name,
+        path,
+        url,
+        size: (file.size / 1024 / 1024).toFixed(1) + 'MB',
+        folderId: currentFolder?.id || null,
+        date: today(),
+      };
+      setPdfs(prev => [newPdf, ...prev]);
+      fileRef.current.value = '';
+      setMessage({ type:'success', text:`"${file.name}" 업로드 완료! 1-2분 후 열람 가능합니다.` });
+    } catch (err) {
+      setMessage({ type:'error', text: err.message });
+    } finally {
+      setUploading(false);
+    }
   };
 
-  const deletePdf = (pdf) => {
+  const deletePdf = async (pdf) => {
     if (!confirm(`"${pdf.name}" 을(를) 삭제하시겠습니까?`)) return;
+    if (token && pdf.path) {
+      try {
+        const sha = await getFileSha(pdf.path);
+        if (sha) await ghApiPdf(pdf.path, 'DELETE', { message: `Delete PDF: ${pdf.name}`, sha });
+      } catch {}
+    }
     setPdfs(prev => prev.filter(p => p.id !== pdf.id));
     if (viewing?.id === pdf.id) setViewing(null);
   };
@@ -1029,7 +1078,7 @@ function PdfLibrary() {
       <div className="page-header flex-between">
         <div>
           <h1 className="page-title">자료실</h1>
-          <p className="text-muted">Google Drive PDF 링크를 등록하고 열람합니다</p>
+          <p className="text-muted">PDF 파일을 업로드하고 열람합니다</p>
         </div>
       </div>
 
@@ -1042,21 +1091,17 @@ function PdfLibrary() {
         </div>
       )}
 
-      {/* Add PDF Link */}
+      {/* Upload */}
       <div className="card mb-md">
-        <div className="card-header"><h3 className="card-title">📎 PDF 링크 등록{currentFolder ? ` → ${currentFolder.name}` : ''}</h3></div>
+        <div className="card-header"><h3 className="card-title">📤 PDF 업로드{currentFolder ? ` → ${currentFolder.name}` : ''}</h3></div>
         <div className="card-body">
-          <input className="input mb-sm" placeholder="자료 이름 (예: 2025 수능특강 한국지리)"
-            value={form.name} onChange={e => setForm({...form, name:e.target.value})} />
           <div className="pdf-upload-row">
-            <input className="input" placeholder="Google Drive 공유 링크 붙여넣기"
-              value={form.url} onChange={e => setForm({...form, url:e.target.value})}
-              onKeyDown={e => e.key === 'Enter' && addPdf()} style={{flex:1}} />
-            <button className="btn btn-primary" onClick={addPdf}>등록</button>
+            <input ref={fileRef} type="file" accept=".pdf" className="input" style={{flex:1}} />
+            <button className="btn btn-primary" onClick={handleUpload} disabled={uploading}>
+              {uploading ? '업로드 중...' : '업로드'}
+            </button>
           </div>
-          <p className="text-sm text-muted" style={{marginTop:8}}>
-            Google Drive에서 PDF 우클릭 → 공유 → "링크가 있는 모든 사용자"로 설정 후 링크 복사
-          </p>
+          <p className="text-sm text-muted" style={{marginTop:8}}>최대 25MB · GitHub Pages에 저장됩니다</p>
         </div>
       </div>
 
@@ -1068,7 +1113,7 @@ function PdfLibrary() {
             <button className="btn btn-sm" onClick={() => setViewing(null)}>✕ 닫기</button>
           </div>
           <div className="card-body" style={{padding:0}}>
-            <iframe src={viewing.embedUrl} className="pdf-viewer-frame" title={viewing.name} allow="autoplay" />
+            <iframe src={viewing.url} className="pdf-viewer-frame" title={viewing.name} />
           </div>
         </div>
       )}
@@ -1140,6 +1185,7 @@ function PdfLibrary() {
                 </div>
                 <div className="flex gap-sm" style={{marginTop:4}}>
                   <span className="text-xs text-muted">{pdf.date}</span>
+                  {pdf.size && <span className="text-xs text-muted">{pdf.size}</span>}
                 </div>
               </div>
               <div className="flex gap-xs" style={{flexShrink:0}}>
