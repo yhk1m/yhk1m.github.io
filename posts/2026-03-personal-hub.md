@@ -4,7 +4,6 @@
 
 ![테스트](https://https://postfiles.pstatic.net/MjAyNjAzMTdfMTAx/MDAxNzczNzI3NDQ0Njk4.aE8MAAjOOO8sY07kU5AqyInd8DbYOujRLWT5ZGY6Cxcg.CKGD-PUrGCxFHw45ojOvZaByxmvxMD7TasnWFgO860Ug.PNG/image.png?type=w773/img.png)
 
-
 퍼블릭 영역에서는 포트폴리오를 통해 나 자신을 소개하고, 프라이빗 영역에서는 일상 관리 도구들을 활용할 수 있습니다. React 18을 CDN으로 불러와 별도의 빌드 과정 없이 동작하며, 모든 데이터는 localStorage에 저장됩니다.
 
 ## 주요 기능
