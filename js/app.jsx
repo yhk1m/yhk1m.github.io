@@ -1433,7 +1433,7 @@ function PostEditor() {
                 value={tokenInput} onChange={e => setTokenInput(e.target.value)} />
               <button className="btn btn-primary" onClick={saveToken}>저장</button>
             </div>
-            {token && <p className="text-sm mt-sm" style={{color:'var(--text-muted)'}}>현재 토큰: {token.slice(0,8)}...</p>}
+            {token && <p className="text-sm mt-sm" style={{color:'var(--text-muted)', wordBreak:'break-all'}}>현재 토큰: {token}</p>}
           </div>
         </div>
       )}
