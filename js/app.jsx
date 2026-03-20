@@ -1038,6 +1038,7 @@ function PostEditor() {
   // Load existing posts for management
   const [posts, setPosts] = useState([]);
   const [editingId, setEditingId] = useState(null);
+  const [editingFile, setEditingFile] = useState(null);
   const [expanded, setExpanded] = useState(false);
   const [showMdGuide, setShowMdGuide] = useState(false);
 
@@ -1091,7 +1092,7 @@ function PostEditor() {
     setMessage(null);
 
     try {
-      const filename = generateFilename();
+      const filename = editingFile || generateFilename();
       const mdContent = form.body;
 
       // 1. Upload markdown file
@@ -1152,6 +1153,7 @@ function PostEditor() {
       setMessage({ type:'success', text: `"${form.title}" 게시 완료! 1-2분 후 사이트에 반영됩니다.` });
       setForm(emptyForm);
       setEditingId(null);
+      setEditingFile(null);
       loadPosts();
     } catch (err) {
       setMessage({ type:'error', text: err.message });
@@ -1162,6 +1164,7 @@ function PostEditor() {
 
   const editPost = async (post) => {
     setEditingId(post.id);
+    setEditingFile(post.file || null);
     setForm({
       title: post.title?.ko || post.title,
       cat: post.cat?.ko || post.cat,
@@ -1366,7 +1369,7 @@ function PostEditor() {
 
           <div className="flex gap-sm mt-md" style={{justifyContent:'flex-end'}}>
             {editingId && (
-              <button className="btn" onClick={() => { setForm(emptyForm); setEditingId(null); }}>
+              <button className="btn" onClick={() => { setForm(emptyForm); setEditingId(null); setEditingFile(null); }}>
                 취소
               </button>
             )}
