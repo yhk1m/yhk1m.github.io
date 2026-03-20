@@ -1,96 +1,185 @@
 [
   {
     "id": 1,
-    "cat": { "ko": "프로그램", "en": "Program" },
-    "title": { "ko": "Personal Hub", "en": "Personal Hub" },
+    "cat": {
+      "ko": "프로그램",
+      "en": "Program"
+    },
+    "title": {
+      "ko": "Personal Hub",
+      "en": "Personal Hub"
+    },
     "desc": {
       "ko": "스케줄링, 포트폴리오, 도구함을 통합한 개인 웹 플랫폼. React 기반 SPA.",
-      "en": "Integrated personal web platform with scheduling, portfolio, and productivity tools. React SPA."
+      "en": "스케줄링, 포트폴리오, 도구함을 통합한 개인 웹 플랫폼. React 기반 SPA."
     },
     "date": "2026-03",
     "file": "2026-03-personal-hub.md",
-    "tech": ["React 18", "Vanilla CSS", "localStorage", "Babel"],
+    "tech": [
+      "React 18",
+      "Vanilla CSS",
+      "localStorage",
+      "Babel"
+    ],
     "links": [
-      { "label": "GitHub", "url": "https://github.com/yhk1m/yhk1m.github.io" },
-      { "label": "Live", "url": "https://yhk1m.github.io" }
+      {
+        "label": "GitHub",
+        "url": "https://github.com/yhk1m/yhk1m.github.io"
+      },
+      {
+        "label": "Live",
+        "url": "https://yhk1m.github.io"
+      }
     ]
   },
   {
     "id": 2,
-    "cat": { "ko": "프로그램", "en": "Program" },
-    "title": { "ko": "eGIS - 교육용 GIS", "en": "eGIS - Educational GIS" },
+    "cat": {
+      "ko": "프로그램",
+      "en": "Program"
+    },
+    "title": {
+      "ko": "eGIS - 교육용 GIS",
+      "en": "eGIS - Educational GIS"
+    },
     "desc": {
       "ko": "OpenLayers 기반 교육용 GIS 웹 애플리케이션. 공간 분석, 데이터 시각화, GeoTIFF 지원.",
       "en": "OpenLayers-based educational GIS web app. Spatial analysis, data visualization, GeoTIFF support."
     },
     "date": "2024-12",
     "file": "2024-12-egis.md",
-    "tech": ["OpenLayers", "GeoTIFF", "JavaScript", "HTML/CSS"]
+    "tech": [
+      "OpenLayers",
+      "GeoTIFF",
+      "JavaScript",
+      "HTML/CSS"
+    ]
   },
   {
     "id": 3,
-    "cat": { "ko": "프로그램", "en": "Program" },
-    "title": { "ko": "Geolgo - 한국지리올림피아드", "en": "Geolgo - Geography Olympiad" },
+    "cat": {
+      "ko": "프로그램",
+      "en": "Program"
+    },
+    "title": {
+      "ko": "Geolgo - 한국지리올림피아드",
+      "en": "Geolgo - Geography Olympiad"
+    },
     "desc": {
       "ko": "Next.js 기반 한국지리올림피아드 시스템. ECharts 시각화, PDF/Excel 출력.",
       "en": "Next.js-based Korean Geography Olympiad system. ECharts visualization, PDF/Excel export."
     },
     "date": "2025-06",
     "file": "2025-06-geolgo.md",
-    "tech": ["Next.js", "ECharts", "PDF/Excel Export", "React"]
+    "tech": [
+      "Next.js",
+      "ECharts",
+      "PDF/Excel Export",
+      "React"
+    ]
   },
   {
     "id": 4,
-    "cat": { "ko": "프로그램", "en": "Program" },
-    "title": { "ko": "통사랑 - 사회 기출문제 검색", "en": "Tongsarang - Exam Search" },
+    "cat": {
+      "ko": "프로그램",
+      "en": "Program"
+    },
+    "title": {
+      "ko": "통사랑 - 사회 기출문제 검색",
+      "en": "Tongsarang - Exam Search"
+    },
     "desc": {
       "ko": "사회 과목 기출문제를 검색하고 PDF로 출력할 수 있는 도구.",
       "en": "Social studies past exam question search tool with PDF export."
     },
     "date": "2025-03",
     "file": "2025-03-tongsarang.md",
-    "tech": ["JavaScript", "PDF Generation", "HTML/CSS"]
+    "tech": [
+      "JavaScript",
+      "PDF Generation",
+      "HTML/CSS"
+    ]
   },
   {
     "id": 5,
-    "cat": { "ko": "프로그램", "en": "Program" },
-    "title": { "ko": "Classroom Manager", "en": "Classroom Manager" },
+    "cat": {
+      "ko": "프로그램",
+      "en": "Program"
+    },
+    "title": {
+      "ko": "Classroom Manager",
+      "en": "Classroom Manager"
+    },
     "desc": {
       "ko": "React 기반 교실 관리 도구. 좌석 배치, 드래그 앤 드롭, 학생 관리.",
       "en": "React-based classroom management tool. Seating arrangement, drag & drop, student management."
     },
     "date": "2025-04",
     "file": "2025-04-classroom-manager.md",
-    "tech": ["React", "Drag & Drop API", "CSS Grid", "localStorage"]
+    "tech": [
+      "React",
+      "Drag & Drop API",
+      "CSS Grid",
+      "localStorage"
+    ]
   },
   {
     "id": 6,
-    "cat": { "ko": "프로그램", "en": "Program" },
-    "title": { "ko": "Geotester", "en": "Geotester" },
+    "cat": {
+      "ko": "프로그램",
+      "en": "Program"
+    },
+    "title": {
+      "ko": "Geotester",
+      "en": "Geotester"
+    },
     "desc": {
       "ko": "Leaflet 기반 지리 테스트 및 매핑 도구. Chart.js 시각화 포함.",
       "en": "Leaflet-based geographic testing and mapping tool with Chart.js visualization."
     },
     "date": "2025-08",
     "file": "2025-08-geotester.md",
-    "tech": ["Next.js", "Leaflet", "Chart.js", "Zustand", "Supabase"]
+    "tech": [
+      "Next.js",
+      "Leaflet",
+      "Chart.js",
+      "Zustand",
+      "Supabase"
+    ]
   },
   {
     "id": 7,
-    "cat": { "ko": "프로그램", "en": "Program" },
-    "title": { "ko": "진도표 관리 시스템", "en": "Progress Tracker" },
+    "cat": {
+      "ko": "프로그램",
+      "en": "Program"
+    },
+    "title": {
+      "ko": "진도표 관리 시스템",
+      "en": "Progress Tracker"
+    },
     "desc": {
       "ko": "Electron 기반 데스크톱 앱. SQL.js 로컬 DB로 진도 관리.",
       "en": "Electron desktop app using SQL.js for local database-driven progress management."
     },
     "date": "2025-02",
     "file": "2025-02-progress-tracker.md",
-    "tech": ["Electron", "SQL.js", "JavaScript", "HTML/CSS"]
+    "tech": [
+      "Electron",
+      "SQL.js",
+      "JavaScript",
+      "HTML/CSS"
+    ]
   },
   {
     "id": 8,
-    "cat": { "ko": "글", "en": "Article" },
-    "title": { "ko": "GIS 데이터 처리 가이드", "en": "GIS Data Processing Guide" },
+    "cat": {
+      "ko": "글",
+      "en": "Article"
+    },
+    "title": {
+      "ko": "GIS 데이터 처리 가이드",
+      "en": "GIS Data Processing Guide"
+    },
     "desc": {
       "ko": "DEM, Slope, Aspect 등 지형 분석 기법에 대한 실전 가이드.",
       "en": "Practical guide on terrain analysis techniques including DEM, Slope, and Aspect."
@@ -100,8 +189,14 @@
   },
   {
     "id": 9,
-    "cat": { "ko": "글", "en": "Article" },
-    "title": { "ko": "Python 자동화 PPT 생성", "en": "Python Automated PPT Generation" },
+    "cat": {
+      "ko": "글",
+      "en": "Article"
+    },
+    "title": {
+      "ko": "Python 자동화 PPT 생성",
+      "en": "Python Automated PPT Generation"
+    },
     "desc": {
       "ko": "python-pptx를 활용한 프레젠테이션 자동 생성 방법론.",
       "en": "How to automatically generate presentations using python-pptx."
