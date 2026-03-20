@@ -1038,6 +1038,8 @@ function PostEditor() {
   // Load existing posts for management
   const [posts, setPosts] = useState([]);
   const [editingId, setEditingId] = useState(null);
+  const [expanded, setExpanded] = useState(false);
+  const [showMdGuide, setShowMdGuide] = useState(false);
 
   const loadPosts = useCallback(() => {
     fetch(postsBase + 'index.json')
@@ -1297,11 +1299,15 @@ function PostEditor() {
           </div>
 
           {/* Editor */}
-          <div className="card">
+          <div className={`card${expanded ? ' editor-expanded' : ''}`}>
             <div className="card-header">
               <h3 className="card-title">📝 본문 (마크다운)</h3>
               <div className="flex gap-sm">
+                <button className="btn btn-sm btn-ghost" onClick={() => setShowMdGuide(true)}>❓ 마크다운 안내</button>
                 <button className="btn btn-sm btn-ghost" onClick={loadTemplate}>템플릿 불러오기</button>
+                <button className="btn btn-sm btn-ghost" onClick={() => setExpanded(!expanded)}>
+                  {expanded ? '↙ 축소' : '↗ 확대'}
+                </button>
                 <button className={`btn btn-sm ${preview?'btn-primary':''}`}
                   onClick={() => setPreview(!preview)}>
                   {preview ? '편집' : '미리보기'}
@@ -1313,12 +1319,50 @@ function PostEditor() {
                 <div className="markdown-body board-detail-content"
                   dangerouslySetInnerHTML={{ __html: marked.parse(form.body || '') }} />
               ) : (
-                <textarea className="textarea post-editor-body" rows={20}
+                <textarea className="textarea post-editor-body" rows={expanded ? 40 : 20}
                   placeholder="마크다운으로 작성하세요..."
                   value={form.body} onChange={e => setForm({...form, body:e.target.value})} />
               )}
             </div>
           </div>
+
+          {/* Markdown Guide Modal */}
+          {showMdGuide && (
+            <div className="modal-overlay" onClick={() => setShowMdGuide(false)}>
+              <div className="modal-content md-guide-modal" onClick={e => e.stopPropagation()}>
+                <div className="flex-between mb-md">
+                  <h2 style={{margin:0}}>마크다운 문법 안내</h2>
+                  <button className="btn btn-sm btn-icon" onClick={() => setShowMdGuide(false)}>✕</button>
+                </div>
+                <div className="md-guide-body">
+                  <table className="md-guide-table">
+                    <thead><tr><th>문법</th><th>결과</th></tr></thead>
+                    <tbody>
+                      <tr><td><code># 제목 1</code></td><td><strong style={{fontSize:'1.4em'}}>제목 1</strong></td></tr>
+                      <tr><td><code>## 제목 2</code></td><td><strong style={{fontSize:'1.2em'}}>제목 2</strong></td></tr>
+                      <tr><td><code>### 제목 3</code></td><td><strong style={{fontSize:'1.05em'}}>제목 3</strong></td></tr>
+                      <tr><td><code>**굵게**</code></td><td><strong>굵게</strong></td></tr>
+                      <tr><td><code>*기울임*</code></td><td><em>기울임</em></td></tr>
+                      <tr><td><code>~~취소선~~</code></td><td><del>취소선</del></td></tr>
+                      <tr><td><code>[링크 텍스트](https://url)</code></td><td><span style={{color:'var(--text)', textDecoration:'underline'}}>링크 텍스트</span></td></tr>
+                      <tr><td><code>![이미지 설명](https://url/img.png)</code></td><td>이미지 삽입</td></tr>
+                      <tr><td><code>- 목록 항목</code></td><td>• 목록 항목</td></tr>
+                      <tr><td><code>1. 번호 목록</code></td><td>1. 번호 목록</td></tr>
+                      <tr><td><code>&gt; 인용문</code></td><td><blockquote style={{margin:'0',padding:'2px 8px',borderLeft:'3px solid var(--border)'}}>인용문</blockquote></td></tr>
+                      <tr><td><code>---</code></td><td><hr style={{margin:'4px 0'}} /></td></tr>
+                      <tr><td><code>`인라인 코드`</code></td><td><code>인라인 코드</code></td></tr>
+                      <tr><td><pre style={{margin:0,fontSize:'0.85em'}}>{'```python\nprint("코드")\n```'}</pre></td><td>코드 블록</td></tr>
+                      <tr><td><code>{'| 열1 | 열2 |'}</code></td><td>표 (테이블)</td></tr>
+                    </tbody>
+                  </table>
+                  <div className="mt-md" style={{padding:'12px', background:'var(--accent-light)', borderRadius:'8px'}}>
+                    <p className="text-sm text-bold" style={{marginBottom:8}}>💡 유튜브 영상 삽입</p>
+                    <code className="text-sm">{'<iframe width="100%" height="400" src="https://www.youtube.com/embed/VIDEO_ID" allowfullscreen></iframe>'}</code>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="flex gap-sm mt-md" style={{justifyContent:'flex-end'}}>
             {editingId && (
