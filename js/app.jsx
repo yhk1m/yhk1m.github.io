@@ -30,6 +30,7 @@ function Nav({ page, setPage, dark, setDark, section, setSection, lang }) {
     { id:'dashboard', label:'대시보드', icon:'📊' },
     { id:'tools', label:'도구함', icon:'🛠️' },
     { id:'diary', label:'일기', icon:'📝' },
+    { id:'pdfs', label:'자료실', icon:'📂' },
     { id:'write', label:'글쓰기', icon:'✍️' },
   ];
 
@@ -944,6 +945,179 @@ function Tools() {
   );
 }
 
+// ===== PDF Library Page =====
+function PdfLibrary() {
+  const [token] = useStore('gh_token', '');
+  const [pdfs, setPdfs] = useStore('pdfs', []);
+  const [uploading, setUploading] = useState(false);
+  const [message, setMessage] = useState(null);
+  const [viewing, setViewing] = useState(null);
+  const fileRef = useRef(null);
+
+  const ghApiPdf = async (path, method, body) => {
+    const res = await fetch(`https://api.github.com/repos/yhk1m/yhk1m.github.io/contents/${path}`, {
+      method,
+      headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    return res;
+  };
+
+  const getFileSha = async (path) => {
+    const res = await fetch(`https://api.github.com/repos/yhk1m/yhk1m.github.io/contents/${path}`, {
+      headers: { 'Authorization': `token ${token}` },
+    });
+    if (res.ok) { const data = await res.json(); return data.sha; }
+    return null;
+  };
+
+  const handleUpload = async () => {
+    if (!token) { setMessage({ type:'error', text:'GitHub 토큰을 먼저 설정해주세요. (글쓰기 페이지에서 설정)' }); return; }
+    const file = fileRef.current?.files?.[0];
+    if (!file) { setMessage({ type:'error', text:'파일을 선택해주세요.' }); return; }
+    if (!file.name.endsWith('.pdf')) { setMessage({ type:'error', text:'PDF 파일만 업로드 가능합니다.' }); return; }
+    if (file.size > 25 * 1024 * 1024) { setMessage({ type:'error', text:'25MB 이하 파일만 업로드 가능합니다.' }); return; }
+
+    setUploading(true);
+    setMessage(null);
+
+    try {
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      const safeName = file.name.replace(/[^a-zA-Z0-9가-힣._\-]/g, '_');
+      const path = `pdfs/${Date.now()}_${safeName}`;
+      const sha = await getFileSha(path);
+      const body = { message: `Upload PDF: ${safeName}`, content: base64 };
+      if (sha) body.sha = sha;
+
+      const res = await ghApiPdf(path, 'PUT', body);
+      if (!res.ok) throw new Error('업로드 실패');
+
+      const data = await res.json();
+      const url = `https://yhk1m.github.io/${path}`;
+      const newPdf = {
+        id: Date.now(),
+        name: file.name,
+        path,
+        url,
+        size: (file.size / 1024 / 1024).toFixed(1) + 'MB',
+        date: today(),
+      };
+      setPdfs(prev => [newPdf, ...prev]);
+      fileRef.current.value = '';
+      setMessage({ type:'success', text:`"${file.name}" 업로드 완료! 1-2분 후 열람 가능합니다.` });
+    } catch (err) {
+      setMessage({ type:'error', text: err.message });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const deletePdf = async (pdf) => {
+    if (!token) { setMessage({ type:'error', text:'GitHub 토큰을 먼저 설정해주세요.' }); return; }
+    if (!confirm(`"${pdf.name}" 을(를) 삭제하시겠습니까?`)) return;
+
+    try {
+      const sha = await getFileSha(pdf.path);
+      if (sha) {
+        const res = await ghApiPdf(pdf.path, 'DELETE', { message: `Delete PDF: ${pdf.name}`, sha });
+        if (!res.ok) throw new Error('삭제 실패');
+      }
+      setPdfs(prev => prev.filter(p => p.id !== pdf.id));
+      if (viewing?.id === pdf.id) setViewing(null);
+      setMessage({ type:'success', text:'삭제 완료!' });
+    } catch (err) {
+      setMessage({ type:'error', text: err.message });
+    }
+  };
+
+  return (
+    <div className="page container">
+      <div className="page-header flex-between">
+        <div>
+          <h1 className="page-title">자료실</h1>
+          <p className="text-muted">PDF 파일을 업로드하고 열람합니다</p>
+        </div>
+      </div>
+
+      {message && (
+        <div className="card mb-md fade-in" style={{
+          borderLeft: `3px solid ${message.type === 'error' ? '#c81e1e' : 'var(--text)'}`,
+          background: message.type === 'error' ? 'rgba(200,30,30,0.04)' : 'var(--accent-light)',
+        }}>
+          <div className="card-body"><p className="text-sm">{message.text}</p></div>
+        </div>
+      )}
+
+      {/* Upload */}
+      <div className="card mb-md">
+        <div className="card-header"><h3 className="card-title">📤 PDF 업로드</h3></div>
+        <div className="card-body">
+          <div className="pdf-upload-row">
+            <input ref={fileRef} type="file" accept=".pdf" className="input" style={{flex:1}} />
+            <button className="btn btn-primary" onClick={handleUpload} disabled={uploading}>
+              {uploading ? '업로드 중...' : '업로드'}
+            </button>
+          </div>
+          <p className="text-sm text-muted" style={{marginTop:8}}>최대 25MB · GitHub Pages에 저장됩니다</p>
+        </div>
+      </div>
+
+      {/* Viewer */}
+      {viewing && (
+        <div className="card mb-md fade-in">
+          <div className="card-header flex-between">
+            <h3 className="card-title" style={{margin:0}}>📄 {viewing.name}</h3>
+            <button className="btn btn-sm" onClick={() => setViewing(null)}>✕ 닫기</button>
+          </div>
+          <div className="card-body" style={{padding:0}}>
+            <iframe src={viewing.url} className="pdf-viewer-frame" title={viewing.name} />
+          </div>
+        </div>
+      )}
+
+      {/* PDF List */}
+      <div className="card">
+        <div className="card-header flex-between">
+          <h3 className="card-title">📂 파일 목록</h3>
+          <span className="badge">{pdfs.length}개</span>
+        </div>
+        <div className="card-body">
+          {pdfs.length === 0 && (
+            <div className="empty-state">
+              <div className="empty-state-icon">📄</div>
+              <div className="empty-state-text">아직 업로드한 파일이 없습니다</div>
+            </div>
+          )}
+          {pdfs.map(pdf => (
+            <div key={pdf.id} className="pdf-list-item">
+              <div style={{flex:1, minWidth:0, cursor:'pointer'}} onClick={() => setViewing(pdf)}>
+                <div className="text-sm text-bold" style={{overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>
+                  📄 {pdf.name}
+                </div>
+                <div className="flex gap-sm" style={{marginTop:4}}>
+                  <span className="text-xs text-muted">{pdf.date}</span>
+                  <span className="text-xs text-muted">{pdf.size}</span>
+                </div>
+              </div>
+              <div className="flex gap-xs" style={{flexShrink:0}}>
+                <button className="btn btn-sm" onClick={() => setViewing(pdf)} title="보기">👁️</button>
+                <a className="btn btn-sm" href={pdf.url} target="_blank" rel="noopener" title="새 탭">↗</a>
+                <button className="btn btn-icon btn-sm btn-danger" onClick={() => deletePdf(pdf)} title="삭제">🗑️</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ===== Diary Page =====
 function Diary() {
   const [entries, setEntries] = useStore('diary', []);
@@ -1457,7 +1631,7 @@ function App() {
       const hash = location.hash.slice(1);
       if (hash === 'private') { setSection('private'); setPage('dashboard'); return; }
       const publicPages = ['portfolio'];
-      const privatePages = ['dashboard', 'tools', 'diary', 'write'];
+      const privatePages = ['dashboard', 'tools', 'diary', 'pdfs', 'write'];
       if (publicPages.includes(hash)) { setSection('public'); setPage(hash); }
       else if (privatePages.includes(hash)) { setSection('private'); setPage(hash); }
     };
@@ -1474,6 +1648,7 @@ function App() {
       case 'dashboard': return <Dashboard />;
       case 'tools': return <Tools />;
       case 'diary': return <Diary />;
+      case 'pdfs': return <PdfLibrary />;
       case 'write': return <PostEditor />;
       default: return <Portfolio lang={lang} />;
     }
