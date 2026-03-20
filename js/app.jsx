@@ -947,18 +947,46 @@ function Tools() {
 
 // ===== PDF Library Page =====
 function PdfLibrary() {
+  const [folders, setFolders] = useStore('pdf_folders', []);
   const [pdfs, setPdfs] = useStore('pdfs', []);
   const [message, setMessage] = useState(null);
   const [viewing, setViewing] = useState(null);
+  const [currentFolder, setCurrentFolder] = useState(null);
   const [form, setForm] = useState({ name:'', url:'' });
+  const [newFolderName, setNewFolderName] = useState('');
+  const [showNewFolder, setShowNewFolder] = useState(false);
 
   const parseGdriveUrl = (url) => {
-    // https://drive.google.com/file/d/FILE_ID/view → embed URL
     const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
     if (match) return `https://drive.google.com/file/d/${match[1]}/preview`;
-    // already an embed/preview link
     if (url.includes('drive.google.com')) return url;
     return url;
+  };
+
+  const addFolder = () => {
+    if (!newFolderName.trim()) return;
+    const folder = { id: Date.now(), name: newFolderName.trim(), date: today() };
+    setFolders(prev => [...prev, folder]);
+    setNewFolderName('');
+    setShowNewFolder(false);
+    setMessage({ type:'success', text:`"${folder.name}" 폴더 생성 완료!` });
+  };
+
+  const deleteFolder = (folder) => {
+    const filesInFolder = pdfs.filter(p => p.folderId === folder.id);
+    const msg = filesInFolder.length > 0
+      ? `"${folder.name}" 폴더와 안의 자료 ${filesInFolder.length}개를 모두 삭제하시겠습니까?`
+      : `"${folder.name}" 폴더를 삭제하시겠습니까?`;
+    if (!confirm(msg)) return;
+    setPdfs(prev => prev.filter(p => p.folderId !== folder.id));
+    setFolders(prev => prev.filter(f => f.id !== folder.id));
+    if (currentFolder?.id === folder.id) setCurrentFolder(null);
+  };
+
+  const renameFolder = (folder) => {
+    const newName = prompt('새 폴더 이름:', folder.name);
+    if (!newName || !newName.trim() || newName === folder.name) return;
+    setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, name: newName.trim() } : f));
   };
 
   const addPdf = () => {
@@ -969,6 +997,7 @@ function PdfLibrary() {
       name: form.name,
       url: form.url,
       embedUrl,
+      folderId: currentFolder?.id || null,
       date: today(),
     };
     setPdfs(prev => [newPdf, ...prev]);
@@ -981,6 +1010,19 @@ function PdfLibrary() {
     setPdfs(prev => prev.filter(p => p.id !== pdf.id));
     if (viewing?.id === pdf.id) setViewing(null);
   };
+
+  const movePdf = (pdf) => {
+    const options = [{ id: null, name: '(루트)' }, ...folders.filter(f => f.id !== pdf.folderId)];
+    const names = options.map((f, i) => `${i}: ${f.name}`).join('\n');
+    const choice = prompt(`이동할 폴더 번호를 입력하세요:\n${names}`);
+    if (choice === null) return;
+    const idx = parseInt(choice);
+    if (isNaN(idx) || idx < 0 || idx >= options.length) return;
+    setPdfs(prev => prev.map(p => p.id === pdf.id ? { ...p, folderId: options[idx].id } : p));
+    setMessage({ type:'success', text:`"${pdf.name}" → "${options[idx].name}" 이동 완료` });
+  };
+
+  const currentPdfs = pdfs.filter(p => (p.folderId || null) === (currentFolder?.id || null));
 
   return (
     <div className="page container">
@@ -1002,7 +1044,7 @@ function PdfLibrary() {
 
       {/* Add PDF Link */}
       <div className="card mb-md">
-        <div className="card-header"><h3 className="card-title">📎 PDF 링크 등록</h3></div>
+        <div className="card-header"><h3 className="card-title">📎 PDF 링크 등록{currentFolder ? ` → ${currentFolder.name}` : ''}</h3></div>
         <div className="card-body">
           <input className="input mb-sm" placeholder="자료 이름 (예: 2025 수능특강 한국지리)"
             value={form.name} onChange={e => setForm({...form, name:e.target.value})} />
@@ -1031,20 +1073,66 @@ function PdfLibrary() {
         </div>
       )}
 
-      {/* PDF List */}
+      {/* Breadcrumb */}
       <div className="card">
         <div className="card-header flex-between">
-          <h3 className="card-title">📂 파일 목록</h3>
-          <span className="badge">{pdfs.length}개</span>
+          <div className="flex gap-sm" style={{alignItems:'center'}}>
+            <span className="pdf-breadcrumb-item" onClick={() => setCurrentFolder(null)}
+              style={{cursor:'pointer', fontWeight: !currentFolder ? 700 : 400}}>
+              📂 전체
+            </span>
+            {currentFolder && (
+              <>
+                <span className="text-muted">/</span>
+                <span className="text-bold">📁 {currentFolder.name}</span>
+              </>
+            )}
+          </div>
+          <div className="flex gap-sm">
+            <button className="btn btn-sm" onClick={() => setShowNewFolder(!showNewFolder)}>+ 새 폴더</button>
+            <span className="badge">{currentPdfs.length}개</span>
+          </div>
         </div>
+
+        {showNewFolder && (
+          <div className="card-body" style={{borderBottom:'1px solid var(--border-light)', paddingBottom:12}}>
+            <div className="pdf-upload-row">
+              <input className="input" placeholder="폴더 이름"
+                value={newFolderName} onChange={e => setNewFolderName(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && addFolder()} style={{flex:1}} />
+              <button className="btn btn-primary" onClick={addFolder}>만들기</button>
+            </div>
+          </div>
+        )}
+
         <div className="card-body">
-          {pdfs.length === 0 && (
+          {/* Folders (only show at root) */}
+          {!currentFolder && folders.map(folder => (
+            <div key={folder.id} className="pdf-list-item">
+              <div style={{flex:1, minWidth:0, cursor:'pointer'}} onClick={() => setCurrentFolder(folder)}>
+                <div className="text-sm text-bold">
+                  📁 {folder.name}
+                </div>
+                <div className="flex gap-sm" style={{marginTop:4}}>
+                  <span className="text-xs text-muted">{pdfs.filter(p => p.folderId === folder.id).length}개 자료</span>
+                  <span className="text-xs text-muted">{folder.date}</span>
+                </div>
+              </div>
+              <div className="flex gap-xs" style={{flexShrink:0}}>
+                <button className="btn btn-sm" onClick={() => renameFolder(folder)} title="이름 변경">✏️</button>
+                <button className="btn btn-icon btn-sm btn-danger" onClick={() => deleteFolder(folder)} title="삭제">🗑️</button>
+              </div>
+            </div>
+          ))}
+
+          {/* Files */}
+          {currentPdfs.length === 0 && (!currentFolder ? folders.length === 0 : true) && (
             <div className="empty-state">
               <div className="empty-state-icon">📄</div>
               <div className="empty-state-text">등록된 자료가 없습니다</div>
             </div>
           )}
-          {pdfs.map(pdf => (
+          {currentPdfs.map(pdf => (
             <div key={pdf.id} className="pdf-list-item">
               <div style={{flex:1, minWidth:0, cursor:'pointer'}} onClick={() => setViewing(pdf)}>
                 <div className="text-sm text-bold" style={{overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>
@@ -1056,6 +1144,7 @@ function PdfLibrary() {
               </div>
               <div className="flex gap-xs" style={{flexShrink:0}}>
                 <button className="btn btn-sm" onClick={() => setViewing(pdf)} title="보기">👁️</button>
+                <button className="btn btn-sm" onClick={() => movePdf(pdf)} title="이동">📦</button>
                 <a className="btn btn-sm" href={pdf.url} target="_blank" rel="noopener" title="새 탭">↗</a>
                 <button className="btn btn-icon btn-sm btn-danger" onClick={() => deletePdf(pdf)} title="삭제">🗑️</button>
               </div>
