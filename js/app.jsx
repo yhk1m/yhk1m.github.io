@@ -23,11 +23,58 @@ const diffDays = (target) => {
   return Math.ceil((d - now) / 86400000);
 };
 
+// ===== Main Page Defaults =====
+const DEFAULT_HERO = {
+  label:'Geography Teacher · Developer · Creator',
+  name:'Yonghyun Kim', nameSub:'김용현',
+  desc:'지리 교육의 디지털 전환을 만들어갑니다.\n수업 현장의 필요에서 시작해, 교육용 웹 애플리케이션을 직접 설계하고 개발합니다.',
+  tags:['양정고등학교 지리교사','EdTech 개발','파노라마 모의고사','비그늘 YouTube'],
+};
+const DEFAULT_PROJECTS = [
+  {name:'GeoStatAtlas',icon:'🌍',desc:'세계 통계 지도 시각화 플랫폼. Robinson·Miller 투영법, 경제 블록 오버레이, Köppen 기후 필터링 등 수업용 인터랙티브 지도 제공.',tech:['D3.js','Leaflet','GAS','Google Sheets'],url:'https://geostatlas.yhk1m.kr'},
+  {name:'GeoTester',icon:'📝',desc:'지리 시험 문제 자동 생성기. Canvas 기반 그래프 렌더링, 좌표 변환, 모듈식 문항 아키텍처로 다양한 유형의 문제를 생성.',tech:['Canvas API','GAS','EPSG:5179'],url:'https://geotester.yhk1m.kr'},
+  {name:'GeoGrapher',icon:'📊',desc:'지리 그래프 생성기. 6종 차트 타입, CSV 업로드, Google Sheets 연동, 한/영 UI 지원으로 수업 자료 제작에 최적화.',tech:['Canvas','Chart.js','CSV'],url:'https://geographer.yhk1m.kr'},
+  {name:'LatLong Finder',icon:'📍',desc:'위경도 탐색 지도 도구. 12색 마커, 위경도 격자 오버레이, DMS/Decimal 전환, CSV·PNG 내보내기, TopoJSON 세계지도.',tech:['Leaflet.js','TopoJSON'],url:'https://latlongfinder.yhk1m.kr'},
+  {name:'GeoGameCenter',icon:'🎮',desc:'지리 게임 플랫폼. GeoPuzzle 드래그앤드롭 퍼즐, GeoQuizBattle 팀 퀴즈 대결 등 게이미피케이션 기반 학습 도구.',tech:['Firebase','GeoJSON','Realtime DB'],url:'https://geogamecenter.yhk1m.kr'},
+  {name:'BokdoRoad',icon:'🏫',desc:'임용시험 기출문제 검색 플랫폼. 복도길만 걸으세요 — 전 과목 임용 기출 아카이브를 목표로 개발 중.',tech:['Coming Soon'],url:'https://bokdoroad.yhk1m.kr'},
+  {name:'통사랑',icon:'🔍',desc:'수능 사회탐구 기출문제 검색 플랫폼. 연도별·단원별 검색, 해설 연동으로 수능 대비 학습을 지원.',tech:['GAS','Google Sheets'],url:'https://tongsarang.kr'},
+  {name:'e-GIS',icon:'🗺️',desc:'교육용 GIS 플랫폼. OpenLayers 기반 공간 데이터 시각화, Supabase/PostGIS 연동으로 지리 수업에서 실제 GIS를 체험.',tech:['OpenLayers','Supabase','PostGIS'],url:'https://e-gis.kr'},
+];
+const DEFAULT_BIO = {
+  paragraphs:[
+    '현직 고등학교 지리교사로서 수업 현장에서 느끼는 불편함을 기술로 해결합니다. "이런 도구가 있으면 좋겠다"는 생각에서 시작해, 직접 설계하고 개발하여 실제 수업에 적용하고 있습니다.',
+    'GAS, JavaScript, D3.js, Leaflet.js 등을 활용한 교육용 웹 애플리케이션 개발에 깊은 경험을 갖고 있으며, 한국지도학회·지리교육학회 등 학술대회에서 연구 결과를 발표해왔습니다.',
+    '파노라마 모의고사 발행을 통해 평가 콘텐츠를 제작하고, 비그늘 유튜브 채널을 통해 경제·교육 콘텐츠를 공유하고 있습니다.',
+  ],
+  stats:[
+    {number:'8+',label:'Education Web Apps'},
+    {number:'2',label:'도메인 서비스 운영'},
+    {number:'D3 · Leaflet',label:'Core Tech Stack'},
+    {number:'GAS',label:'Primary Platform'},
+  ],
+  timeline:[
+    {date:'2026.03',title:'개인 허브 웹페이지 개발',desc:'스케줄링, 포트폴리오, 도구함을 통합한 개인 웹 플랫폼 구축'},
+    {date:'2025.06',title:'Geolgo — 한국지리올림피아드 시스템',desc:'ECharts 시각화, PDF/Excel 출력 기능 개발'},
+    {date:'2025.03',title:'통사랑 — 사회 기출문제 검색',desc:'수능 사회탐구 기출문제 검색 및 PDF 출력 플랫폼'},
+    {date:'2024.12',title:'e-GIS — 교육용 GIS 플랫폼',desc:'OpenLayers 기반 공간 데이터 시각화'},
+    {date:'2024.09',title:'GIS 데이터 처리 가이드 발행',desc:'DEM, Slope, Aspect 등 지형 분석 실전 가이드'},
+    {date:'2023',title:'콘텐츠 크리에이터 활동 시작',desc:'유튜브, 블로그를 통한 지식 공유 및 커뮤니티 형성'},
+  ],
+};
+const DEFAULT_YOUTUBE = {name:'비그늘 BGNL',handle:'@bgnl',desc:'경제와 교육을 주제로 깊이 있는 콘텐츠를 만듭니다. 복잡한 개념을 명확하게, 교과서 너머의 시선으로 풀어냅니다.',url:'https://youtube.com/@bgnl'};
+const DEFAULT_CONTACTS = [
+  {icon:'📸',label:'Instagram',value:'@yhk1m',url:'https://instagram.com/yhk1m'},
+  {icon:'📝',label:'Blog',value:'rainshadow21',url:'https://blog.naver.com/rainshadow21'},
+  {icon:'🎬',label:'YouTube',value:'비그늘 BGNL',url:'https://youtube.com/@bgnl'},
+  {icon:'✉️',label:'Email',value:'rainshadow21@naver.com',url:'mailto:rainshadow21@naver.com'},
+];
+
 // ===== Navigation =====
 function Nav({ page, setPage, dark, setDark, section, setSection, lang }) {
   const [open, setOpen] = useState(false);
   const privatePages = [
     { id:'dashboard', label:'대시보드', icon:'📊' },
+    { id:'main-edit', label:'메인 편집', icon:'🎨' },
     { id:'tools', label:'도구함', icon:'🛠️' },
     { id:'diary', label:'일기', icon:'📝' },
     { id:'pdfs', label:'자료실', icon:'📂' },
@@ -38,9 +85,17 @@ function Nav({ page, setPage, dark, setDark, section, setSection, lang }) {
     <nav className="nav">
       <div className="container nav-inner">
         <div className="nav-logo" onClick={() => { setPage(section === 'public' ? 'portfolio' : 'dashboard'); setOpen(false); }}>
-          <span className="nav-logo-text">MY HUB</span>
+          <img src={window.HUB_LANG==='en'?'../favicon.svg':'favicon.svg'} alt="" className="nav-logo-icon" />
+          <span className="nav-logo-text">BGNL.kr</span>
           {section === 'private' && <span className="nav-section-badge">PRIVATE</span>}
         </div>
+        {section === 'public' && (
+          <div className="nav-scroll-links">
+            {['Bio','Geo','Notes','Labs'].map(s => (
+              <span key={s} onClick={() => document.getElementById('s-'+s.toLowerCase())?.scrollIntoView({behavior:'smooth'})}>{s}</span>
+            ))}
+          </div>
+        )}
         {section === 'private' && (
           <div className={`nav-links ${open ? 'open' : ''}`}>
             {privatePages.map(p => (
@@ -364,11 +419,16 @@ const TEXTS = {
   ko: {
     hero: { line1:'안녕하세요,', name:'김용현', line2:'입니다',
       subtitle:'기술과 콘텐츠로 가치를 만드는 크리에이터\n끊임없이 배우고, 나누고, 성장합니다' },
-    tabs: { about:'소개', timeline:'타임라인', works:'작업물', board:'게시판' },
+    tabs: { bio:'Bio', geo:'Geo', notes:'Notes', labs:'Labs' },
     aboutTitle: 'About Me',
     aboutP1: '다양한 분야에 관심을 가지고 끊임없이 도전하는 크리에이터입니다. 프로그래밍, GIS, 콘텐츠 제작 등 여러 영역을 넘나들며 기술적 역량과 창의적 표현력을 동시에 키워가고 있습니다.',
     aboutP2: '유튜브와 블로그를 통해 배운 것들을 나누고, 출판을 통해 더 깊은 지식을 전달하고 있습니다. 함께 성장하는 것을 가장 가치있게 생각합니다.',
     skills: ['Python','JavaScript','React','HTML/CSS','GIS','QGIS','데이터분석','콘텐츠제작','프레젠테이션','기획','글쓰기','영상편집'],
+    skillGroups: [
+      { label: 'DEVELOPMENT', items: ['Python','JavaScript','React','HTML/CSS'] },
+      { label: 'GIS & DATA', items: ['GIS','QGIS','데이터분석'] },
+      { label: 'CONTENT', items: ['콘텐츠제작','프레젠테이션','기획','글쓰기','영상편집'] },
+    ],
     timeline: [
       { year:'2026', title:'개인 허브 웹페이지 개발', desc:'스케줄링, 포트폴리오, 도구함을 통합한 개인 웹 플랫폼 구축' },
       { year:'2025', title:'자기소개 프레젠테이션 제작', desc:'Python 기반 자동 PPT 생성 시스템 개발' },
@@ -391,11 +451,16 @@ const TEXTS = {
   en: {
     hero: { line1:"Hello, I'm", name:'Yonghyun Kim', line2:'',
       subtitle:'A creator who builds value through technology and content\nConstantly learning, sharing, and growing' },
-    tabs: { about:'About', timeline:'Timeline', works:'Works', board:'Board' },
+    tabs: { bio:'Bio', geo:'Geo', notes:'Notes', labs:'Labs' },
     aboutTitle: 'About Me',
     aboutP1: 'I am a creator who constantly challenges myself across diverse fields. Navigating through programming, GIS, and content creation, I continue to develop both technical skills and creative expression.',
     aboutP2: 'I share what I learn through YouTube and my blog, and deliver deeper knowledge through publications. I value growing together above all.',
     skills: ['Python','JavaScript','React','HTML/CSS','GIS','QGIS','Data Analysis','Content Creation','Presentation','Planning','Writing','Video Editing'],
+    skillGroups: [
+      { label: 'DEVELOPMENT', items: ['Python','JavaScript','React','HTML/CSS'] },
+      { label: 'GIS & DATA', items: ['GIS','QGIS','Data Analysis'] },
+      { label: 'CONTENT', items: ['Content Creation','Presentation','Planning','Writing','Video Editing'] },
+    ],
     timeline: [
       { year:'2026', title:'Personal Hub Website', desc:'Built an integrated personal platform with scheduling, portfolio, and productivity tools' },
       { year:'2025', title:'Automated Presentation System', desc:'Developed a Python-based automatic PPT generation system' },
@@ -547,105 +612,276 @@ function Board({ items, filterAll, texts }) {
     return <BoardDetail item={selectedItem} onBack={() => setSelectedId(null)} texts={texts} />;
   }
 
+  const catIcon = (cat) => {
+    if (cat === '프로그램' || cat === 'Program') return '🔬';
+    if (cat === '지리' || cat === 'Geography') return '🌍';
+    return '📝';
+  };
+
   return (
     <div className="fade-in">
-      <div className="board-filters">
-        <button className={`board-filter ${filter==='all'?'active':''}`} onClick={()=>setFilter('all')}>
-          {filterAll} ({items.length})
-        </button>
-        {categories.map(cat => (
-          <button key={cat} className={`board-filter ${filter===cat?'active':''}`} onClick={()=>setFilter(cat)}>
-            {cat} ({items.filter(i=>i.cat===cat).length})
+      {categories.length > 1 && (
+        <div className="board-filters">
+          <button className={`board-filter ${filter==='all'?'active':''}`} onClick={()=>setFilter('all')}>
+            {filterAll} ({items.length})
           </button>
-        ))}
-      </div>
-      <div className="board-list">
+          {categories.map(cat => (
+            <button key={cat} className={`board-filter ${filter===cat?'active':''}`} onClick={()=>setFilter(cat)}>
+              {cat} ({items.filter(i=>i.cat===cat).length})
+            </button>
+          ))}
+        </div>
+      )}
+      {sorted.length === 0 && (
+        <div className="empty-state">
+          <div className="empty-state-icon">📂</div>
+          <div className="empty-state-text">아직 게시물이 없습니다</div>
+        </div>
+      )}
+      <div className="board-grid">
         {sorted.map(item => (
-          <div key={item.id} className="board-item board-item-clickable" onClick={() => setSelectedId(item.id)}>
-            <div className="board-item-header">
-              <span className="badge">{item.cat}</span>
-              <span className="board-item-date">{item.date}</span>
+          <div key={item.id} className="board-card" onClick={() => setSelectedId(item.id)}>
+            <div className="board-card-thumb">
+              <span className="board-card-icon">{catIcon(item.cat)}</span>
             </div>
-            <h3 className="board-item-title">{item.title}</h3>
-            <p className="board-item-desc">{item.desc}</p>
+            <div className="board-card-body">
+              <h3 className="board-card-title">{item.title}</h3>
+              <p className="board-card-desc">{item.desc}</p>
+              {item.tech && item.tech.length > 0 && (
+                <div className="board-card-tech">
+                  {item.tech.slice(0,4).map(t => <span key={t} className="tech-badge">{t}</span>)}
+                </div>
+              )}
+              <div className="board-card-footer">
+                <span className="board-card-date">{item.date}</span>
+                {item.links && item.links.length > 0 && (
+                  <div className="board-card-links">
+                    {item.links.map((link, i) => (
+                      <a key={i} href={link.url} target="_blank" rel="noopener noreferrer"
+                        onClick={e => e.stopPropagation()} className="board-card-link">{link.label} →</a>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         ))}
       </div>
-      <div className="board-count">{sorted.length} / {items.length}</div>
+      {sorted.length > 0 && <div className="board-count">{sorted.length} / {items.length}</div>}
     </div>
   );
 }
 
-// ===== Portfolio Page =====
+// ===== Portfolio Page (Scroll Layout) =====
 function Portfolio({ lang = 'ko' }) {
-  const [tab, setTab] = useState('about');
   const t = TEXTS[lang];
   const posts = usePosts(lang);
+  const [selectedPost, setSelectedPost] = useState(null);
+
+  const [hero] = useStore('mainHero', DEFAULT_HERO);
+  const [projects] = useStore('mainProjects', DEFAULT_PROJECTS);
+  const [bio] = useStore('mainBio', DEFAULT_BIO);
+  const [youtube] = useStore('mainYoutube', DEFAULT_YOUTUBE);
+  const [contacts] = useStore('mainContacts', DEFAULT_CONTACTS);
+
+  const geoPosts = posts.filter(p => p.cat === '지리' || p.cat === 'Geography');
+  const notesPosts = posts.filter(p => p.cat === '글' || p.cat === 'Article');
+
+  // Scroll reveal
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const el = entry.target;
+          const siblings = Array.from(el.parentElement.children).filter(c =>
+            c.classList.contains(el.className.split(' ')[0])
+          );
+          const i = siblings.indexOf(el);
+          setTimeout(() => el.classList.add('visible'), i * 80);
+          observer.unobserve(el);
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+    document.querySelectorAll('.s-project-card, .s-post-card, .s-stat-card, .s-contact-card, .s-youtube-card').forEach(el => {
+      observer.observe(el);
+    });
+    return () => observer.disconnect();
+  }, [posts, selectedPost]);
+
+  if (selectedPost) {
+    return (
+      <div className="page container" style={{paddingTop:96}}>
+        <BoardDetail item={selectedPost} onBack={() => setSelectedPost(null)} texts={t} />
+      </div>
+    );
+  }
+
+  let sectionNum = 1;
 
   return (
-    <div className="page container portfolio">
-      <div className="hero slide-up">
-        <div className="hero-row">
-          <div className="hero-cell hero-cell-name">
-            <h1 className="hero-title">{t.hero.line1} <span>{t.hero.name}</span>{t.hero.line2}</h1>
-          </div>
-          <div className="hero-cell hero-cell-desc">
-            <p className="hero-subtitle">{t.hero.subtitle.split('\n').map((line, i) =>
-              <React.Fragment key={i}>{line}{i === 0 && <br/>}</React.Fragment>
-            )}</p>
-          </div>
-          <div className="hero-cell hero-cell-links">
-            <a className="btn btn-primary" href="#" target="_blank" style={{borderBottom:'none'}}>YouTube</a>
-            <a className="btn" href="#" target="_blank" style={{borderBottom:'none'}}>Blog</a>
-            <a className="btn" href="#" target="_blank" style={{borderBottom:'none'}}>GitHub</a>
+    <div className="portfolio-scroll">
+      {/* Hero */}
+      <section className="s-hero">
+        <div className="container s-hero-content">
+          <div className="s-hero-label">{hero.label}</div>
+          <h1 className="s-hero-name">{hero.name}</h1>
+          <p className="s-hero-name-sub">{hero.nameSub}</p>
+          <p className="s-hero-desc">{hero.desc.split('\n').map((line, i) =>
+            <React.Fragment key={i}>{line}{i < hero.desc.split('\n').length - 1 && <br/>}</React.Fragment>
+          )}</p>
+          <div className="s-hero-tags">
+            {hero.tags.map((tag, i) => <span key={i} className="s-hero-tag">{tag}</span>)}
           </div>
         </div>
-        <div className="hero-bar">
-          <div className="hero-tabs">
-            {[{id:'about',label:t.tabs.about},{id:'timeline',label:t.tabs.timeline},{id:'board',label:t.tabs.board}].map(tb => (
-              <button key={tb.id} className={`hero-tab ${tab===tb.id?'active':''}`} onClick={()=>setTab(tb.id)}>{tb.label}</button>
+      </section>
+
+      {/* 01 Bio */}
+      <section className="s-section" id="s-bio">
+        <div className="container">
+          <div className="s-section-header">
+            <span className="s-section-num">0{sectionNum++}</span>
+            <h2 className="s-section-title"><span className="tab-initial">B</span>io</h2>
+            <div className="s-section-line" />
+          </div>
+          <div className="s-about-content">
+            <div className="s-about-text">
+              {bio.paragraphs.map((p, i) => <p key={i}>{p}</p>)}
+            </div>
+            <div className="s-about-stats">
+              {bio.stats.map((s, i) => (
+                <div key={i} className="s-stat-card"><div className="s-stat-number">{s.number}</div><div className="s-stat-label">{s.label}</div></div>
+              ))}
+            </div>
+          </div>
+          {bio.timeline && bio.timeline.length > 0 && (
+            <div className="s-timeline mt-lg">
+              {bio.timeline.map((item, i) => (
+                <div key={i} className="s-timeline-item">
+                  <div className="s-timeline-date">{item.date}</div>
+                  <div className="s-timeline-dot" />
+                  <div className="s-timeline-body">
+                    <div className="s-timeline-title">{item.title}</div>
+                    <div className="s-timeline-desc">{item.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* 02 Geo (if posts exist) */}
+      {geoPosts.length > 0 && (
+        <section className="s-section" id="s-geo">
+          <div className="container">
+            <div className="s-section-header">
+              <span className="s-section-num">0{sectionNum++}</span>
+              <h2 className="s-section-title"><span className="tab-initial">G</span>eo</h2>
+              <div className="s-section-line" />
+            </div>
+            <div className="s-projects-grid">
+              {geoPosts.map(item => (
+                <div key={item.id} className="s-post-card" onClick={() => setSelectedPost(item)}>
+                  <div className="s-project-icon">🌍</div>
+                  <h3 className="s-project-name">{item.title}</h3>
+                  <p className="s-project-desc">{item.desc}</p>
+                  {item.tech && item.tech.length > 0 && (
+                    <div className="s-project-tech">{item.tech.map(t => <span key={t}>{t}</span>)}</div>
+                  )}
+                  <div className="s-project-date">{item.date}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* 03 Notes (if posts exist) */}
+      {notesPosts.length > 0 && (
+        <section className="s-section" id="s-notes">
+          <div className="container">
+            <div className="s-section-header">
+              <span className="s-section-num">0{sectionNum++}</span>
+              <h2 className="s-section-title"><span className="tab-initial">N</span>otes</h2>
+              <div className="s-section-line" />
+            </div>
+            <div className="s-projects-grid">
+              {notesPosts.map(item => (
+                <div key={item.id} className="s-post-card" onClick={() => setSelectedPost(item)}>
+                  <div className="s-project-icon">📝</div>
+                  <h3 className="s-project-name">{item.title}</h3>
+                  <p className="s-project-desc">{item.desc}</p>
+                  <div className="s-project-date">{item.date}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* 04 Labs */}
+      <section className="s-section" id="s-labs">
+        <div className="container">
+          <div className="s-section-header">
+            <span className="s-section-num">0{sectionNum++}</span>
+            <h2 className="s-section-title"><span className="tab-initial">L</span>abs</h2>
+            <div className="s-section-line" />
+          </div>
+          <div className="s-projects-grid">
+            {projects.map((p, i) => (
+              <a key={i} href={p.url} target="_blank" rel="noopener noreferrer" className="s-project-card" style={{borderBottom:'none'}}>
+                <span className="s-project-arrow">↗</span>
+                <div className="s-project-icon">{p.icon}</div>
+                <h3 className="s-project-name">{p.name}</h3>
+                <p className="s-project-desc">{p.desc}</p>
+                <div className="s-project-tech">
+                  {p.tech.map(t => <span key={t}>{t}</span>)}
+                </div>
+              </a>
             ))}
           </div>
-          <VisitorCounter />
         </div>
-      </div>
+      </section>
 
-      {tab === 'about' && (
-        <div className="fade-in">
-          <div className="card">
-            <div className="card-body">
-              <h2 style={{marginBottom:16}}>{t.aboutTitle}</h2>
-              <p className="text-muted" style={{lineHeight:1.8, fontSize:'1.05rem'}}>
-                {t.aboutP1}<br/><br/>{t.aboutP2}
-              </p>
-              <div className="skill-tags">
-                {t.skills.map(s => <span key={s} className="skill-tag">{s}</span>)}
-              </div>
+      {/* YouTube */}
+      <section className="s-section" id="s-youtube">
+        <div className="container">
+          <div className="s-section-header">
+            <span className="s-section-num">0{sectionNum++}</span>
+            <h2 className="s-section-title">YouTube</h2>
+            <div className="s-section-line" />
+          </div>
+          <div className="s-youtube-card">
+            <div className="s-yt-icon">▶</div>
+            <div className="s-yt-info">
+              <h3 className="s-yt-name">{youtube.name}</h3>
+              <p className="s-yt-handle">{youtube.handle}</p>
+              <p className="s-yt-desc">{youtube.desc}</p>
+              <a href={youtube.url} target="_blank" rel="noopener noreferrer" className="s-yt-link">채널 방문하기 →</a>
             </div>
           </div>
         </div>
-      )}
+      </section>
 
-      {tab === 'timeline' && (
-        <div className="fade-in">
-          <div className="card">
-            <div className="card-body">
-              <div className="timeline">
-                {t.timeline.map((item, i) => (
-                  <div key={i} className="timeline-item">
-                    <div className="timeline-dot" />
-                    <div className="timeline-date">{item.year}</div>
-                    <div className="timeline-title">{item.title}</div>
-                    <div className="timeline-desc">{item.desc}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
+      {/* Contact */}
+      <section className="s-section" id="s-contact">
+        <div className="container">
+          <div className="s-section-header">
+            <span className="s-section-num">0{sectionNum++}</span>
+            <h2 className="s-section-title">Contact</h2>
+            <div className="s-section-line" />
+          </div>
+          <div className="s-contact-grid">
+            {contacts.map((c, i) => (
+              <a key={i} href={c.url} target={c.url.startsWith('mailto')?undefined:'_blank'} rel="noopener noreferrer" className="s-contact-card" style={{borderBottom:'none'}}>
+                <div className="s-contact-icon">{c.icon}</div>
+                <div><div className="s-contact-label">{c.label}</div><div className="s-contact-value">{c.value}</div></div>
+              </a>
+            ))}
           </div>
         </div>
-      )}
-
-      {tab === 'board' && <Board items={posts} filterAll={t.filterAll} texts={t} />}
+      </section>
     </div>
   );
 }
@@ -1383,7 +1619,7 @@ function PostEditor() {
 
       const newEntry = {
         id: editingId || Date.now(),
-        cat: { ko: form.cat, en: form.cat === '프로그램' ? 'Program' : 'Article' },
+        cat: { ko: form.cat, en: form.cat === '프로그램' ? 'Program' : form.cat === '지리' ? 'Geography' : 'Article' },
         title: { ko: form.title, en: form.title },
         desc: { ko: form.desc, en: form.desc },
         date: form.date.slice(0, 7),
@@ -1543,8 +1779,9 @@ function PostEditor() {
                 onChange={e => setForm({...form, title:e.target.value})} />
               <div className="input-row mb-sm">
                 <select className="select" value={form.cat} onChange={e => setForm({...form, cat:e.target.value})}>
-                  <option value="프로그램">프로그램</option>
-                  <option value="글">글</option>
+                  <option value="프로그램">프로그램 (Labs)</option>
+                  <option value="글">글 (Notes)</option>
+                  <option value="지리">지리 (Geo)</option>
                 </select>
                 <input className="input" type="date" value={form.date}
                   onChange={e => setForm({...form, date:e.target.value})} />
@@ -1676,17 +1913,280 @@ function PostEditor() {
   );
 }
 
+// ===== Main Page Editor =====
+function MainPageEditor() {
+  const [hero, setHero] = useStore('mainHero', DEFAULT_HERO);
+  const [projects, setProjects] = useStore('mainProjects', DEFAULT_PROJECTS);
+  const [bio, setBio] = useStore('mainBio', DEFAULT_BIO);
+  const [youtube, setYoutube] = useStore('mainYoutube', DEFAULT_YOUTUBE);
+  const [contacts, setContacts] = useStore('mainContacts', DEFAULT_CONTACTS);
+
+  const [editTab, setEditTab] = useState('hero');
+  const [editIdx, setEditIdx] = useState(null);
+  const [pForm, setPForm] = useState({name:'',icon:'',desc:'',tech:'',url:''});
+  const [cForm, setCForm] = useState({icon:'',label:'',value:'',url:''});
+  const [sForm, setSForm] = useState({number:'',label:''});
+  const [tForm, setTForm] = useState({date:'',title:'',desc:''});
+
+  const startEditProject = (i) => {
+    const p = projects[i];
+    setPForm({...p, tech: p.tech.join(', ')});
+    setEditIdx(i);
+  };
+  const saveProject = () => {
+    if (!pForm.name) return;
+    const p = {...pForm, tech: pForm.tech.split(',').map(t=>t.trim()).filter(Boolean)};
+    if (editIdx >= 0) setProjects(projects.map((pr,i) => i===editIdx ? p : pr));
+    else setProjects([...projects, p]);
+    setEditIdx(null); setPForm({name:'',icon:'',desc:'',tech:'',url:''});
+  };
+  const moveProject = (i, dir) => {
+    const j = i + dir;
+    if (j < 0 || j >= projects.length) return;
+    const arr = [...projects]; [arr[i], arr[j]] = [arr[j], arr[i]];
+    setProjects(arr);
+  };
+
+  const startEditContact = (i) => { setCForm({...contacts[i]}); setEditIdx(i); };
+  const saveContact = () => {
+    if (!cForm.label) return;
+    if (editIdx >= 0) setContacts(contacts.map((c,i) => i===editIdx ? cForm : c));
+    else setContacts([...contacts, cForm]);
+    setEditIdx(null); setCForm({icon:'',label:'',value:'',url:''});
+  };
+
+  const saveStat = () => {
+    if (!sForm.number) return;
+    if (editIdx >= 0) setBio({...bio, stats: bio.stats.map((s,i) => i===editIdx ? sForm : s)});
+    else setBio({...bio, stats: [...bio.stats, sForm]});
+    setEditIdx(null); setSForm({number:'',label:''});
+  };
+
+  return (
+    <div className="page container">
+      <div className="page-header">
+        <h1 className="page-title">메인 페이지 편집</h1>
+        <p className="text-muted">공개 페이지의 콘텐츠를 수정합니다</p>
+      </div>
+
+      <div className="tabs">
+        {[{id:'hero',l:'Hero'},{id:'projects',l:'Projects'},{id:'bio',l:'Bio'},{id:'youtube',l:'YouTube'},{id:'contacts',l:'Contact'}].map(t => (
+          <button key={t.id} className={`tab ${editTab===t.id?'active':''}`} onClick={()=>{setEditTab(t.id);setEditIdx(null);}}>{t.l}</button>
+        ))}
+      </div>
+
+      {/* Hero */}
+      {editTab === 'hero' && (
+        <div className="card fade-in">
+          <div className="card-header"><h3 className="card-title">Hero 섹션</h3></div>
+          <div className="card-body">
+            <label className="text-sm text-muted">라벨 (상단 소제목)</label>
+            <input className="input mb-sm mt-xs" value={hero.label} onChange={e => setHero({...hero, label:e.target.value})} />
+            <label className="text-sm text-muted">영문 이름</label>
+            <input className="input mb-sm mt-xs" value={hero.name} onChange={e => setHero({...hero, name:e.target.value})} />
+            <label className="text-sm text-muted">한글 이름</label>
+            <input className="input mb-sm mt-xs" value={hero.nameSub} onChange={e => setHero({...hero, nameSub:e.target.value})} />
+            <label className="text-sm text-muted">소개 (줄바꿈 가능)</label>
+            <textarea className="textarea mb-sm mt-xs" rows={4} value={hero.desc} onChange={e => setHero({...hero, desc:e.target.value})} />
+            <label className="text-sm text-muted">태그 (쉼표로 구분)</label>
+            <input className="input mt-xs" value={hero.tagsRaw ?? hero.tags.join(', ')}
+              onChange={e => setHero({...hero, tagsRaw: e.target.value, tags: e.target.value.split(',').map(t=>t.trim()).filter(Boolean)})}
+              onBlur={() => setHero(h => { const {tagsRaw, ...rest} = h; return rest; })} />
+          </div>
+        </div>
+      )}
+
+      {/* Projects */}
+      {editTab === 'projects' && (
+        <div className="card fade-in">
+          <div className="card-header"><h3 className="card-title">Projects (Labs)</h3>
+            <button className="btn btn-primary btn-sm" onClick={()=>{setEditIdx(-1);setPForm({name:'',icon:'',desc:'',tech:'',url:''});}}>+ 추가</button>
+          </div>
+          <div className="card-body">
+            {editIdx !== null && (
+              <div className="mb-md fade-in" style={{padding:16,border:'1px solid var(--border)',background:'var(--bg-secondary)'}}>
+                <div className="input-row mb-sm">
+                  <input className="input" style={{maxWidth:80}} placeholder="아이콘" value={pForm.icon} onChange={e=>setPForm({...pForm,icon:e.target.value})} />
+                  <input className="input" placeholder="이름" value={pForm.name} onChange={e=>setPForm({...pForm,name:e.target.value})} />
+                </div>
+                <textarea className="textarea mb-sm" rows={2} placeholder="설명" value={pForm.desc} onChange={e=>setPForm({...pForm,desc:e.target.value})} />
+                <input className="input mb-sm" placeholder="기술 스택 (쉼표 구분)" value={pForm.tech} onChange={e=>setPForm({...pForm,tech:e.target.value})} />
+                <div className="input-row">
+                  <input className="input" placeholder="URL" value={pForm.url} onChange={e=>setPForm({...pForm,url:e.target.value})} />
+                  <button className="btn btn-primary" onClick={saveProject}>저장</button>
+                  <button className="btn" onClick={()=>setEditIdx(null)}>취소</button>
+                </div>
+              </div>
+            )}
+            {projects.map((p, i) => (
+              <div key={i} className="post-manage-item">
+                <div style={{flex:1,minWidth:0}}>
+                  <div className="text-sm text-bold">{p.icon} {p.name}</div>
+                  <div className="text-sm text-muted" style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.url}</div>
+                </div>
+                <div className="flex gap-xs">
+                  <button className="btn btn-icon btn-sm" onClick={()=>startEditProject(i)} title="수정">✏️</button>
+                  <button className="btn btn-icon btn-sm" onClick={()=>moveProject(i,-1)} title="위로">↑</button>
+                  <button className="btn btn-icon btn-sm" onClick={()=>moveProject(i,1)} title="아래로">↓</button>
+                  <button className="btn btn-icon btn-sm btn-danger" onClick={()=>{if(confirm('삭제?'))setProjects(projects.filter((_,j)=>j!==i));}} title="삭제">🗑️</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Bio */}
+      {editTab === 'bio' && (
+        <div className="fade-in">
+          <div className="card mb-md">
+            <div className="card-header"><h3 className="card-title">소개 문단</h3></div>
+            <div className="card-body">
+              {bio.paragraphs.map((p, i) => (
+                <div key={i} className="mb-sm">
+                  <div className="flex-between mb-xs">
+                    <span className="text-sm text-muted">문단 {i+1}</span>
+                    <button className="btn btn-icon btn-sm btn-danger" onClick={()=>setBio({...bio,paragraphs:bio.paragraphs.filter((_,j)=>j!==i)})}>✕</button>
+                  </div>
+                  <textarea className="textarea" rows={3} value={p} onChange={e=>{const arr=[...bio.paragraphs];arr[i]=e.target.value;setBio({...bio,paragraphs:arr});}} />
+                </div>
+              ))}
+              <button className="btn btn-sm mt-sm" onClick={()=>setBio({...bio,paragraphs:[...bio.paragraphs,'']})}>+ 문단 추가</button>
+            </div>
+          </div>
+          <div className="card">
+            <div className="card-header"><h3 className="card-title">스탯 카드</h3>
+              <button className="btn btn-primary btn-sm" onClick={()=>{setEditIdx(-1);setSForm({number:'',label:''});}}>+ 추가</button>
+            </div>
+            <div className="card-body">
+              {editIdx !== null && editTab === 'bio' && (
+                <div className="mb-md fade-in" style={{padding:16,border:'1px solid var(--border)',background:'var(--bg-secondary)'}}>
+                  <div className="input-row">
+                    <input className="input" placeholder="숫자/값" value={sForm.number} onChange={e=>setSForm({...sForm,number:e.target.value})} />
+                    <input className="input" placeholder="라벨" value={sForm.label} onChange={e=>setSForm({...sForm,label:e.target.value})} />
+                    <button className="btn btn-primary" onClick={saveStat}>저장</button>
+                    <button className="btn" onClick={()=>setEditIdx(null)}>취소</button>
+                  </div>
+                </div>
+              )}
+              {bio.stats.map((s, i) => (
+                <div key={i} className="post-manage-item">
+                  <div><span className="text-bold">{s.number}</span> <span className="text-sm text-muted">— {s.label}</span></div>
+                  <div className="flex gap-xs">
+                    <button className="btn btn-icon btn-sm" onClick={()=>{setEditIdx(i);setSForm({...s});}}>✏️</button>
+                    <button className="btn btn-icon btn-sm btn-danger" onClick={()=>setBio({...bio,stats:bio.stats.filter((_,j)=>j!==i)})}>🗑️</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="card mt-md">
+            <div className="card-header"><h3 className="card-title">타임라인</h3>
+              <button className="btn btn-primary btn-sm" onClick={()=>{setEditIdx('t-new');setTForm({date:'',title:'',desc:''});}}>+ 추가</button>
+            </div>
+            <div className="card-body">
+              {String(editIdx).startsWith('t') && (
+                <div className="mb-md fade-in" style={{padding:16,border:'1px solid var(--border)',background:'var(--bg-secondary)'}}>
+                  <div className="input-row mb-sm">
+                    <input className="input" style={{maxWidth:120}} placeholder="연월 (2026.03)" value={tForm.date} onChange={e=>setTForm({...tForm,date:e.target.value})} />
+                    <input className="input" placeholder="제목" value={tForm.title} onChange={e=>setTForm({...tForm,title:e.target.value})} />
+                  </div>
+                  <div className="input-row">
+                    <input className="input" placeholder="설명" value={tForm.desc} onChange={e=>setTForm({...tForm,desc:e.target.value})} />
+                    <button className="btn btn-primary" onClick={()=>{
+                      if(!tForm.date||!tForm.title)return;
+                      const tl=bio.timeline||[];
+                      if(editIdx==='t-new') setBio({...bio,timeline:[tForm,...tl]});
+                      else { const idx=parseInt(String(editIdx).slice(2)); setBio({...bio,timeline:tl.map((t,i)=>i===idx?tForm:t)}); }
+                      setEditIdx(null);setTForm({date:'',title:'',desc:''});
+                    }}>저장</button>
+                    <button className="btn" onClick={()=>setEditIdx(null)}>취소</button>
+                  </div>
+                </div>
+              )}
+              {(bio.timeline||[]).map((t, i) => (
+                <div key={i} className="post-manage-item">
+                  <div style={{flex:1,minWidth:0}}>
+                    <div className="flex gap-sm" style={{alignItems:'center'}}>
+                      <span className="badge">{t.date}</span>
+                      <span className="text-sm text-bold">{t.title}</span>
+                    </div>
+                    {t.desc && <div className="text-sm text-muted mt-xs">{t.desc}</div>}
+                  </div>
+                  <div className="flex gap-xs">
+                    <button className="btn btn-icon btn-sm" onClick={()=>{setEditIdx('t-'+i);setTForm({...t});}}>✏️</button>
+                    <button className="btn btn-icon btn-sm" onClick={()=>{if(i>0){const arr=[...(bio.timeline||[])];[arr[i],arr[i-1]]=[arr[i-1],arr[i]];setBio({...bio,timeline:arr});}}} title="위로">↑</button>
+                    <button className="btn btn-icon btn-sm" onClick={()=>{const tl=bio.timeline||[];if(i<tl.length-1){const arr=[...tl];[arr[i],arr[i+1]]=[arr[i+1],arr[i]];setBio({...bio,timeline:arr});}}} title="아래로">↓</button>
+                    <button className="btn btn-icon btn-sm btn-danger" onClick={()=>setBio({...bio,timeline:(bio.timeline||[]).filter((_,j)=>j!==i)})}>🗑️</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* YouTube */}
+      {editTab === 'youtube' && (
+        <div className="card fade-in">
+          <div className="card-header"><h3 className="card-title">YouTube 섹션</h3></div>
+          <div className="card-body">
+            <label className="text-sm text-muted">채널 이름</label>
+            <input className="input mb-sm mt-xs" value={youtube.name} onChange={e=>setYoutube({...youtube,name:e.target.value})} />
+            <label className="text-sm text-muted">핸들</label>
+            <input className="input mb-sm mt-xs" value={youtube.handle} onChange={e=>setYoutube({...youtube,handle:e.target.value})} />
+            <label className="text-sm text-muted">설명</label>
+            <textarea className="textarea mb-sm mt-xs" rows={3} value={youtube.desc} onChange={e=>setYoutube({...youtube,desc:e.target.value})} />
+            <label className="text-sm text-muted">채널 URL</label>
+            <input className="input mt-xs" value={youtube.url} onChange={e=>setYoutube({...youtube,url:e.target.value})} />
+          </div>
+        </div>
+      )}
+
+      {/* Contacts */}
+      {editTab === 'contacts' && (
+        <div className="card fade-in">
+          <div className="card-header"><h3 className="card-title">Contact 섹션</h3>
+            <button className="btn btn-primary btn-sm" onClick={()=>{setEditIdx(-1);setCForm({icon:'',label:'',value:'',url:''});}}>+ 추가</button>
+          </div>
+          <div className="card-body">
+            {editIdx !== null && editTab === 'contacts' && (
+              <div className="mb-md fade-in" style={{padding:16,border:'1px solid var(--border)',background:'var(--bg-secondary)'}}>
+                <div className="input-row mb-sm">
+                  <input className="input" style={{maxWidth:80}} placeholder="아이콘" value={cForm.icon} onChange={e=>setCForm({...cForm,icon:e.target.value})} />
+                  <input className="input" placeholder="라벨" value={cForm.label} onChange={e=>setCForm({...cForm,label:e.target.value})} />
+                </div>
+                <div className="input-row">
+                  <input className="input" placeholder="표시값" value={cForm.value} onChange={e=>setCForm({...cForm,value:e.target.value})} />
+                  <input className="input" placeholder="URL" value={cForm.url} onChange={e=>setCForm({...cForm,url:e.target.value})} />
+                  <button className="btn btn-primary" onClick={saveContact}>저장</button>
+                  <button className="btn" onClick={()=>setEditIdx(null)}>취소</button>
+                </div>
+              </div>
+            )}
+            {contacts.map((c, i) => (
+              <div key={i} className="post-manage-item">
+                <div><span>{c.icon}</span> <span className="text-bold">{c.label}</span> <span className="text-sm text-muted">— {c.value}</span></div>
+                <div className="flex gap-xs">
+                  <button className="btn btn-icon btn-sm" onClick={()=>startEditContact(i)}>✏️</button>
+                  <button className="btn btn-icon btn-sm btn-danger" onClick={()=>setContacts(contacts.filter((_,j)=>j!==i))}>🗑️</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ===== Footer =====
 function Footer({ lang = 'ko' }) {
   return (
-    <footer className="footer">
-      <div className="container footer-content">
-        <span className="footer-copy">&copy; 2026 {lang === 'ko' ? '김용현' : 'Yonghyun Kim'} Personal Hub. All rights reserved.</span>
-        <div className="footer-links">
-          <a href="#">YouTube</a>
-          <a href="#">Blog</a>
-          <a href="#">GitHub</a>
-        </div>
+    <footer className="footer" style={{textAlign:'center'}}>
+      <div className="container">
+        <p className="s-footer-quote">지리 교육의 디지털 전환을 만들어갑니다.</p>
+        <p className="footer-copy">&copy; 2026 Yonghyun Kim. All rights reserved.</p>
       </div>
     </footer>
   );
@@ -1713,23 +2213,23 @@ function App() {
   useEffect(() => {
     const onHash = () => {
       const hash = location.hash.slice(1);
+      if (!hash || hash === 'portfolio') { setSection('public'); setPage('portfolio'); return; }
       if (hash === 'private') { setSection('private'); setPage('dashboard'); return; }
-      const publicPages = ['portfolio'];
-      const privatePages = ['dashboard', 'tools', 'diary', 'pdfs', 'write'];
-      if (publicPages.includes(hash)) { setSection('public'); setPage(hash); }
-      else if (privatePages.includes(hash)) { setSection('private'); setPage(hash); }
+      const privatePages = ['dashboard', 'main-edit', 'tools', 'diary', 'pdfs', 'write'];
+      if (privatePages.includes(hash)) { setSection('private'); setPage(hash); }
     };
     window.addEventListener('hashchange', onHash);
     onHash();
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
 
-  useEffect(() => { location.hash = page; }, [page]);
+  useEffect(() => { if (page === 'portfolio') { history.replaceState(null, '', location.pathname); } else { location.hash = page; } }, [page]);
 
   const renderPage = () => {
     switch (page) {
       case 'portfolio': return <Portfolio lang={lang} />;
       case 'dashboard': return <Dashboard />;
+      case 'main-edit': return <MainPageEditor />;
       case 'tools': return <Tools />;
       case 'diary': return <Diary />;
       case 'pdfs': return <PdfLibrary />;
