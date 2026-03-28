@@ -138,8 +138,7 @@ h3 { font-size: 1.1rem; font-weight: 600; line-height: 1.4; }
 .nav-logo-text {
   font-size: 1.2rem;
   font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  letter-spacing: -0.04em;
   color: var(--text);
 }
 
@@ -588,7 +587,7 @@ h3 { font-size: 1.1rem; font-weight: 600; line-height: 1.4; }
 .hero-tab:last-child { border-right: none; }
 .hero-tab:hover { color: var(--text); background: var(--accent-light); }
 .hero-tab.active { color: var(--bg); background: var(--text); }
-.tab-initial { font-size: 1.1em; font-weight: 900; }
+.tab-initial { font-size: 1.1em; font-weight: 900; color: var(--text); }
 
 .hero-bar .visitor-counter { border: none; margin-left: auto; }
 .hero-bar .visitor-stat { padding: 10px 20px; }
@@ -1579,8 +1578,9 @@ h3 { font-size: 1.1rem; font-weight: 600; line-height: 1.4; }
 }
 .s-section-title {
   font-size: 32px;
-  font-weight: 700;
+  font-weight: 400;
   letter-spacing: -0.02em;
+  color: var(--text-secondary);
 }
 .s-section-line {
   flex: 1;
@@ -1891,14 +1891,24 @@ h3 { font-size: 1.1rem; font-weight: 600; line-height: 1.4; }
   display: flex;
   gap: 32px;
 }
-.nav-scroll-links span {
+.nav-scroll-link {
   font-size: 13px;
-  color: var(--text-secondary);
+  color: var(--text-muted);
   cursor: pointer;
-  transition: color 0.2s;
+  transition: all 0.2s;
   letter-spacing: 0.02em;
+  padding-bottom: 2px;
+  border-bottom: 1.5px solid transparent;
 }
-.nav-scroll-links span:hover { color: var(--text); }
+.nav-scroll-initial {
+  color: var(--text);
+  font-weight: 700;
+}
+.nav-scroll-link:hover {
+  color: var(--text);
+  font-weight: 600;
+  border-bottom-color: var(--text);
+}
 
 /* Scroll Footer */
 .s-footer-quote {

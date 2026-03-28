@@ -91,8 +91,10 @@ function Nav({ page, setPage, dark, setDark, section, setSection, lang }) {
         </div>
         {section === 'public' && (
           <div className="nav-scroll-links">
-            {['Bio','Geo','Notes','Labs'].map(s => (
-              <span key={s} onClick={() => document.getElementById('s-'+s.toLowerCase())?.scrollIntoView({behavior:'smooth'})}>{s}</span>
+            {['Bio','Geo','Notes','Lab'].map(s => (
+              <span key={s} className="nav-scroll-link" onClick={() => document.getElementById('s-'+s.toLowerCase())?.scrollIntoView({behavior:'smooth'})}>
+                <span className="nav-scroll-initial">{s[0]}</span>{s.slice(1)}
+              </span>
             ))}
           </div>
         )}
@@ -741,7 +743,7 @@ function Portfolio({ lang = 'ko' }) {
         <div className="container">
           <div className="s-section-header">
             <span className="s-section-num">0{sectionNum++}</span>
-            <h2 className="s-section-title"><span className="tab-initial">B</span>io</h2>
+            <h2 className="s-section-title"><span className="tab-initial">B</span>iography</h2>
             <div className="s-section-line" />
           </div>
           <div className="s-about-content">
@@ -777,7 +779,7 @@ function Portfolio({ lang = 'ko' }) {
           <div className="container">
             <div className="s-section-header">
               <span className="s-section-num">0{sectionNum++}</span>
-              <h2 className="s-section-title"><span className="tab-initial">G</span>eo</h2>
+              <h2 className="s-section-title"><span className="tab-initial">G</span>eography</h2>
               <div className="s-section-line" />
             </div>
             <div className="s-projects-grid">
@@ -821,11 +823,11 @@ function Portfolio({ lang = 'ko' }) {
       )}
 
       {/* 04 Labs */}
-      <section className="s-section" id="s-labs">
+      <section className="s-section" id="s-lab">
         <div className="container">
           <div className="s-section-header">
             <span className="s-section-num">0{sectionNum++}</span>
-            <h2 className="s-section-title"><span className="tab-initial">L</span>abs</h2>
+            <h2 className="s-section-title"><span className="tab-initial">L</span>aboratory</h2>
             <div className="s-section-line" />
           </div>
           <div className="s-projects-grid">
@@ -1920,6 +1922,9 @@ function MainPageEditor() {
   const [bio, setBio] = useStore('mainBio', DEFAULT_BIO);
   const [youtube, setYoutube] = useStore('mainYoutube', DEFAULT_YOUTUBE);
   const [contacts, setContacts] = useStore('mainContacts', DEFAULT_CONTACTS);
+  const allPosts = usePosts('ko');
+  const geoPosts = allPosts.filter(p => p.cat === '지리');
+  const notesPosts = allPosts.filter(p => p.cat === '글');
 
   const [editTab, setEditTab] = useState('hero');
   const [editIdx, setEditIdx] = useState(null);
@@ -1970,7 +1975,7 @@ function MainPageEditor() {
       </div>
 
       <div className="tabs">
-        {[{id:'hero',l:'Hero'},{id:'projects',l:'Projects'},{id:'bio',l:'Bio'},{id:'youtube',l:'YouTube'},{id:'contacts',l:'Contact'}].map(t => (
+        {[{id:'hero',l:'Hero'},{id:'projects',l:'Projects'},{id:'bio',l:'Bio'},{id:'geo',l:'Geo'},{id:'notes',l:'Notes'},{id:'youtube',l:'YouTube'},{id:'contacts',l:'Contact'}].map(t => (
           <button key={t.id} className={`tab ${editTab===t.id?'active':''}`} onClick={()=>{setEditTab(t.id);setEditIdx(null);}}>{t.l}</button>
         ))}
       </div>
@@ -2122,6 +2127,62 @@ function MainPageEditor() {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Geo */}
+      {editTab === 'geo' && (
+        <div className="card fade-in">
+          <div className="card-header">
+            <h3 className="card-title">Geo 게시물</h3>
+            <button className="btn btn-primary btn-sm" onClick={()=>{window.location.hash='write';}}>+ 새 글 작성</button>
+          </div>
+          <div className="card-body">
+            <p className="text-sm text-muted mb-md">카테고리가 "지리"인 게시물이 Geo 섹션에 표시됩니다. 글쓰기 페이지에서 카테고리를 "지리 (Geo)"로 선택하세요.</p>
+            {geoPosts.length === 0 && (
+              <div className="empty-state"><div className="empty-state-icon">🌍</div><div className="empty-state-text">아직 Geo 게시물이 없습니다</div></div>
+            )}
+            {geoPosts.map(p => (
+              <div key={p.id} className="post-manage-item">
+                <div style={{flex:1,minWidth:0}}>
+                  <div className="flex gap-sm" style={{alignItems:'center',marginBottom:4}}>
+                    <span className="badge">지리</span>
+                    <span className="text-sm text-muted">{p.date}</span>
+                  </div>
+                  <div className="text-sm text-bold">{p.title}</div>
+                  <div className="text-sm text-muted" style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Notes */}
+      {editTab === 'notes' && (
+        <div className="card fade-in">
+          <div className="card-header">
+            <h3 className="card-title">Notes 게시물</h3>
+            <button className="btn btn-primary btn-sm" onClick={()=>{window.location.hash='write';}}>+ 새 글 작성</button>
+          </div>
+          <div className="card-body">
+            <p className="text-sm text-muted mb-md">카테고리가 "글"인 게시물이 Notes 섹션에 표시됩니다. 글쓰기 페이지에서 카테고리를 "글 (Notes)"로 선택하세요.</p>
+            {notesPosts.length === 0 && (
+              <div className="empty-state"><div className="empty-state-icon">📝</div><div className="empty-state-text">아직 Notes 게시물이 없습니다</div></div>
+            )}
+            {notesPosts.map(p => (
+              <div key={p.id} className="post-manage-item">
+                <div style={{flex:1,minWidth:0}}>
+                  <div className="flex gap-sm" style={{alignItems:'center',marginBottom:4}}>
+                    <span className="badge">글</span>
+                    <span className="text-sm text-muted">{p.date}</span>
+                  </div>
+                  <div className="text-sm text-bold">{p.title}</div>
+                  <div className="text-sm text-muted" style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.desc}</div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
