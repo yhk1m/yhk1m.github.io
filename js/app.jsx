@@ -674,6 +674,79 @@ function Board({ items, filterAll, texts }) {
   );
 }
 
+// ===== Hero Globe Animation =====
+function HeroGlobe() {
+  const ref = useRef(null);
+
+  useEffect(() => {
+    let raf, angle = 127;
+    const R = 178, N = 8;
+    const toRad = d => d * Math.PI / 180;
+
+    const ortho = (lon, lat, cLon) => {
+      const l = toRad(lon), p = toRad(lat), l0 = toRad(cLon);
+      if (Math.cos(p) * Math.cos(l - l0) < 0) return null;
+      return [200 + R * Math.cos(p) * Math.sin(l - l0), 200 - R * Math.sin(p)];
+    };
+
+    const tick = () => {
+      const svg = ref.current;
+      if (!svg) { raf = requestAnimationFrame(tick); return; }
+      angle = (angle + 0.04) % 360;
+      const cLon = angle;
+      const a = toRad(angle);
+
+      // Longitude ellipses
+      for (let i = 0; i < N; i++) {
+        const el = svg.querySelector('#lon' + i);
+        if (!el) continue;
+        const phi = (i * Math.PI / (N / 2)) + a;
+        el.setAttribute('rx', Math.max(Math.abs(R * Math.cos(phi)), 0.5));
+        el.setAttribute('opacity', Math.abs(Math.cos(phi)) * 0.7 + 0.3);
+      }
+
+      // Seoul marker (37°N, 127°E)
+      const m = svg.querySelector('#gm'), mp = svg.querySelector('#gmp');
+      if (m && mp) {
+        const pos = ortho(127, 37, cLon);
+        if (pos) {
+          m.setAttribute('cx', pos[0]); m.setAttribute('cy', pos[1]);
+          mp.setAttribute('cx', pos[0]); mp.setAttribute('cy', pos[1]);
+          m.style.opacity = 1; mp.style.opacity = 1;
+        } else {
+          m.style.opacity = 0; mp.style.opacity = 0;
+        }
+      }
+      raf = requestAnimationFrame(tick);
+    };
+
+    const timer = setTimeout(() => { raf = requestAnimationFrame(tick); }, 2500);
+    return () => { cancelAnimationFrame(raf); clearTimeout(timer); };
+  }, []);
+
+  const R = 178, N = 8;
+  return (
+    <svg ref={ref} className="hero-globe" viewBox="0 0 400 400" aria-hidden="true">
+      <defs><clipPath id="gc"><circle cx="200" cy="200" r="176"/></clipPath></defs>
+      <circle cx="200" cy="200" r="178" className="gl gl-outer"/>
+      <g clipPath="url(#gc)">
+        <line x1="0" y1="200" x2="400" y2="200" className="gl gl-lat" style={{animationDelay:'0.8s'}}/>
+        <line x1="10" y1="140" x2="390" y2="140" className="gl gl-lat" style={{animationDelay:'1.0s'}}/>
+        <line x1="50" y1="80" x2="350" y2="80" className="gl gl-lat" style={{animationDelay:'1.2s'}}/>
+        <line x1="10" y1="260" x2="390" y2="260" className="gl gl-lat" style={{animationDelay:'1.1s'}}/>
+        <line x1="50" y1="320" x2="350" y2="320" className="gl gl-lat" style={{animationDelay:'1.3s'}}/>
+        {Array.from({length: N}, (_, i) => {
+          const phi = i * Math.PI / (N / 2);
+          return <ellipse key={i} id={'lon' + i} cx="200" cy="200" rx={Math.max(Math.abs(R * Math.cos(phi)), 0.5)} ry={R}
+            className="gl gl-lon" style={{animationDelay: 0.4 + i * 0.1 + 's'}} />;
+        })}
+      </g>
+      <circle id="gm" cx="200" cy="93" r="5" className="gl-marker"/>
+      <circle id="gmp" cx="200" cy="93" r="12" className="gl-pulse"/>
+    </svg>
+  );
+}
+
 // ===== Portfolio Page (Scroll Layout) =====
 function Portfolio({ lang = 'ko' }) {
   const t = TEXTS[lang];
@@ -725,6 +798,7 @@ function Portfolio({ lang = 'ko' }) {
     <div className="portfolio-scroll">
       {/* Hero */}
       <section className="s-hero">
+        <HeroGlobe />
         <div className="container s-hero-content">
           <div className="s-hero-label">{hero.label}</div>
           <h1 className="s-hero-name">{hero.name}</h1>
@@ -785,8 +859,7 @@ function Portfolio({ lang = 'ko' }) {
             <div className="s-projects-grid">
               {geoPosts.map(item => (
                 <div key={item.id} className="s-post-card" onClick={() => setSelectedPost(item)}>
-                  <div className="s-project-icon">🌍</div>
-                  <h3 className="s-project-name">{item.title}</h3>
+                  <div className="s-card-header-row"><div className="s-project-icon">🌍</div><h3 className="s-project-name">{item.title}</h3></div>
                   <p className="s-project-desc">{item.desc}</p>
                   {item.tech && item.tech.length > 0 && (
                     <div className="s-project-tech">{item.tech.map(t => <span key={t}>{t}</span>)}</div>
@@ -811,8 +884,7 @@ function Portfolio({ lang = 'ko' }) {
             <div className="s-projects-grid">
               {notesPosts.map(item => (
                 <div key={item.id} className="s-post-card" onClick={() => setSelectedPost(item)}>
-                  <div className="s-project-icon">📝</div>
-                  <h3 className="s-project-name">{item.title}</h3>
+                  <div className="s-card-header-row"><div className="s-project-icon">📝</div><h3 className="s-project-name">{item.title}</h3></div>
                   <p className="s-project-desc">{item.desc}</p>
                   <div className="s-project-date">{item.date}</div>
                 </div>
@@ -834,8 +906,7 @@ function Portfolio({ lang = 'ko' }) {
             {projects.map((p, i) => (
               <a key={i} href={p.url} target="_blank" rel="noopener noreferrer" className="s-project-card" style={{borderBottom:'none'}}>
                 <span className="s-project-arrow">↗</span>
-                <div className="s-project-icon">{p.icon}</div>
-                <h3 className="s-project-name">{p.name}</h3>
+                <div className="s-card-header-row"><div className="s-project-icon">{p.icon?.startsWith('data:') ? <img src={p.icon} alt="" style={{width:24,height:24,objectFit:'contain'}} /> : p.icon}</div><h3 className="s-project-name">{p.name}</h3></div>
                 <p className="s-project-desc">{p.desc}</p>
                 <div className="s-project-tech">
                   {p.tech.map(t => <span key={t}>{t}</span>)}
@@ -1975,7 +2046,7 @@ function MainPageEditor() {
       </div>
 
       <div className="tabs">
-        {[{id:'hero',l:'Hero'},{id:'projects',l:'Projects'},{id:'bio',l:'Bio'},{id:'geo',l:'Geo'},{id:'notes',l:'Notes'},{id:'youtube',l:'YouTube'},{id:'contacts',l:'Contact'}].map(t => (
+        {[{id:'hero',l:'Hero'},{id:'bio',l:'Bio'},{id:'geo',l:'Geo'},{id:'notes',l:'Notes'},{id:'projects',l:'Lab'},{id:'youtube',l:'YouTube'},{id:'contacts',l:'Contact'}].map(t => (
           <button key={t.id} className={`tab ${editTab===t.id?'active':''}`} onClick={()=>{setEditTab(t.id);setEditIdx(null);}}>{t.l}</button>
         ))}
       </div>
@@ -2004,14 +2075,30 @@ function MainPageEditor() {
       {/* Projects */}
       {editTab === 'projects' && (
         <div className="card fade-in">
-          <div className="card-header"><h3 className="card-title">Projects (Labs)</h3>
+          <div className="card-header"><h3 className="card-title">Lab</h3>
             <button className="btn btn-primary btn-sm" onClick={()=>{setEditIdx(-1);setPForm({name:'',icon:'',desc:'',tech:'',url:''});}}>+ 추가</button>
           </div>
           <div className="card-body">
             {editIdx !== null && (
               <div className="mb-md fade-in" style={{padding:16,border:'1px solid var(--border)',background:'var(--bg-secondary)'}}>
-                <div className="input-row mb-sm">
-                  <input className="input" style={{maxWidth:80}} placeholder="아이콘" value={pForm.icon} onChange={e=>setPForm({...pForm,icon:e.target.value})} />
+                <div className="input-row mb-sm" style={{alignItems:'center'}}>
+                  <div style={{display:'flex',alignItems:'center',gap:6,flexShrink:0}}>
+                    {pForm.icon && pForm.icon.startsWith('data:') ? (
+                      <img src={pForm.icon} alt="" style={{width:36,height:36,objectFit:'contain',border:'1px solid var(--border)',borderRadius:6}} />
+                    ) : (
+                      <span style={{fontSize:20,width:36,height:36,display:'flex',alignItems:'center',justifyContent:'center',border:'1px solid var(--border)',borderRadius:6}}>{pForm.icon||'?'}</span>
+                    )}
+                    <label className="btn btn-sm" style={{cursor:'pointer',marginBottom:0}}>
+                      파일
+                      <input type="file" accept=".svg,.png,.jpg,.webp" style={{display:'none'}} onChange={e=>{
+                        const file=e.target.files?.[0]; if(!file)return;
+                        const reader=new FileReader();
+                        reader.onload=()=>setPForm({...pForm,icon:reader.result});
+                        reader.readAsDataURL(file);
+                      }} />
+                    </label>
+                    <input className="input" style={{maxWidth:60}} placeholder="이모지" value={pForm.icon?.startsWith('data:')?'':pForm.icon} onChange={e=>setPForm({...pForm,icon:e.target.value})} />
+                  </div>
                   <input className="input" placeholder="이름" value={pForm.name} onChange={e=>setPForm({...pForm,name:e.target.value})} />
                 </div>
                 <textarea className="textarea mb-sm" rows={2} placeholder="설명" value={pForm.desc} onChange={e=>setPForm({...pForm,desc:e.target.value})} />
@@ -2026,7 +2113,7 @@ function MainPageEditor() {
             {projects.map((p, i) => (
               <div key={i} className="post-manage-item">
                 <div style={{flex:1,minWidth:0}}>
-                  <div className="text-sm text-bold">{p.icon} {p.name}</div>
+                  <div className="text-sm text-bold" style={{display:'flex',alignItems:'center',gap:6}}>{p.icon?.startsWith('data:') ? <img src={p.icon} alt="" style={{width:18,height:18,objectFit:'contain'}} /> : p.icon} {p.name}</div>
                   <div className="text-sm text-muted" style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.url}</div>
                 </div>
                 <div className="flex gap-xs">
@@ -2246,7 +2333,6 @@ function Footer({ lang = 'ko' }) {
   return (
     <footer className="footer" style={{textAlign:'center'}}>
       <div className="container">
-        <p className="s-footer-quote">지리 교육의 디지털 전환을 만들어갑니다.</p>
         <p className="footer-copy">&copy; 2026 Yonghyun Kim. All rights reserved.</p>
       </div>
     </footer>

@@ -1510,7 +1510,53 @@ h3 { font-size: 1.1rem; font-weight: 600; line-height: 1.4; }
   align-items: center;
   padding: 120px 0 80px;
 }
-.s-hero-content { max-width: 960px; }
+.s-hero { position: relative; overflow: hidden; }
+.s-hero-content { max-width: 960px; position: relative; z-index: 1; }
+
+/* Globe Animation */
+.hero-globe {
+  position: absolute;
+  right: 10%;
+  top: 50%;
+  width: 520px;
+  height: 520px;
+  opacity: 0.07;
+  transform: translateY(-50%) rotate(-23.5deg);
+}
+.gl {
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 1;
+  stroke-dasharray: 1200;
+  stroke-dashoffset: 1200;
+  animation: drawGl 1.8s ease forwards;
+}
+.gl-outer { stroke-width: 1.5; animation-delay: 0s; }
+.gl-lat { stroke-dasharray: 500; stroke-dashoffset: 500; }
+.gl-lon { stroke-dasharray: 1200; stroke-dashoffset: 1200; }
+@keyframes drawGl {
+  to { stroke-dashoffset: 0; }
+}
+.gl-marker {
+  fill: var(--text);
+  opacity: 0;
+  animation: markerIn 0.4s 1.8s ease forwards;
+}
+.gl-pulse {
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 1.5;
+  opacity: 0;
+  animation: pulseRing 2s 2s ease-out infinite;
+}
+@keyframes markerIn {
+  from { opacity: 0; r: 0; }
+  to { opacity: 1; r: 5; }
+}
+@keyframes pulseRing {
+  0% { opacity: 0.6; r: 5; }
+  100% { opacity: 0; r: 28; }
+}
 .s-hero-label {
   font-size: 12px;
   letter-spacing: 0.15em;
@@ -1522,7 +1568,7 @@ h3 { font-size: 1.1rem; font-weight: 600; line-height: 1.4; }
 }
 .s-hero-name {
   font-size: clamp(48px, 7vw, 80px);
-  font-weight: 900;
+  font-weight: 600;
   line-height: 1.1;
   letter-spacing: -0.03em;
   margin-bottom: 8px;
@@ -1644,16 +1690,17 @@ h3 { font-size: 1.1rem; font-weight: 600; line-height: 1.4; }
   color: var(--text);
   transform: translate(3px, -3px);
 }
-.s-project-icon {
-  width: 44px; height: 44px;
-  border-radius: 10px;
+.s-card-header-row {
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.s-card-header-row .s-project-icon { margin-bottom: 0; }
+.s-card-header-row .s-project-name { margin-bottom: 0; }
+.s-project-icon {
   font-size: 20px;
-  margin-bottom: 20px;
-  background: var(--accent-light);
-  border: 1px solid var(--border);
+  flex-shrink: 0;
 }
 .s-project-name {
   font-size: 16px;
@@ -1983,6 +2030,7 @@ h3 { font-size: 1.1rem; font-weight: 600; line-height: 1.4; }
   .s-timeline-item { flex-direction: column; }
   .s-timeline-dot { left: -24px; top: 30px; }
   .s-timeline-body { padding-left: 0; }
+  .hero-globe { width: 300px; height: 300px; right: -60px; opacity: 0.05; }
   .s-hero { padding: 100px 0 60px; min-height: auto; }
   .s-section { padding: 60px 0; }
   .s-projects-grid { grid-template-columns: 1fr; }
