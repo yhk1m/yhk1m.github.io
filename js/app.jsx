@@ -61,16 +61,16 @@ const DEFAULT_BIO = {
     {date:'2023',title:'콘텐츠 크리에이터 활동 시작',desc:'유튜브, 블로그를 통한 지식 공유 및 커뮤니티 형성'},
   ],
 };
-const DEFAULT_YOUTUBE = {name:'비그늘 BGNL',handle:'@bgnl',desc:'경제와 교육을 주제로 깊이 있는 콘텐츠를 만듭니다. 복잡한 개념을 명확하게, 교과서 너머의 시선으로 풀어냅니다.',url:'https://youtube.com/@bgnl'};
+const DEFAULT_YOUTUBE = {name:'비그늘 BGNL',handle:'@bgnlkr',channelId:'UC7BJiTmOsxfK9ItbRKaw1Mg',desc:'경제와 교육을 주제로 깊이 있는 콘텐츠를 만듭니다. 복잡한 개념을 명확하게, 교과서 너머의 시선으로 풀어냅니다.',url:'https://youtube.com/@bgnlkr'};
 const DEFAULT_CONTACTS = [
   {icon:'📸',label:'Instagram',value:'@yhk1m',url:'https://instagram.com/yhk1m'},
   {icon:'📝',label:'Blog',value:'rainshadow21',url:'https://blog.naver.com/rainshadow21'},
-  {icon:'🎬',label:'YouTube',value:'비그늘 BGNL',url:'https://youtube.com/@bgnl'},
+  {icon:'🎬',label:'YouTube',value:'비그늘 BGNL',url:'https://youtube.com/@bgnlkr'},
   {icon:'✉️',label:'Email',value:'rainshadow21@naver.com',url:'mailto:rainshadow21@naver.com'},
 ];
 
 // ===== Navigation =====
-function Nav({ page, setPage, dark, setDark, section, setSection, lang }) {
+function Nav({ page, setPage, dark, setDark, section, setSection, lang, visitorCounts }) {
   const [open, setOpen] = useState(false);
   const privatePages = [
     { id:'dashboard', label:'대시보드', icon:'📊' },
@@ -91,9 +91,9 @@ function Nav({ page, setPage, dark, setDark, section, setSection, lang }) {
         </div>
         {section === 'public' && (
           <div className="nav-scroll-links">
-            {['Bio','Geo','Notes','Lab'].map(s => (
-              <span key={s} className="nav-scroll-link" onClick={() => document.getElementById('s-'+s.toLowerCase())?.scrollIntoView({behavior:'smooth'})}>
-                <span className="nav-scroll-initial">{s[0]}</span>{s.slice(1)}
+            {[{l:'Bio',id:'bio'},{l:'Geo',id:'geo'},{l:'Notes',id:'notes'},{l:'Lab',id:'lab'},{l:'YouTube',id:'youtube'},{l:'Contact',id:'contact'}].map(s => (
+              <span key={s.id} className="nav-scroll-link" onClick={() => document.getElementById('s-'+s.id)?.scrollIntoView({behavior:'smooth'})}>
+                {s.id === 'youtube' || s.id === 'contact' ? s.l : <>{<span className="nav-scroll-initial">{s.l[0]}</span>}{s.l.slice(1)}</>}
               </span>
             ))}
           </div>
@@ -108,14 +108,21 @@ function Nav({ page, setPage, dark, setDark, section, setSection, lang }) {
             ))}
           </div>
         )}
-        <div className="flex gap-sm">
+        <div className="flex gap-sm align-center">
+          {section === 'public' && visitorCounts && (
+            <div className="nav-visitor-counter">
+              <span className="nav-vc-item">Today <strong>{visitorCounts.today}</strong></span>
+              <span className="nav-vc-divider">|</span>
+              <span className="nav-vc-item">Total <strong>{visitorCounts.total}</strong></span>
+            </div>
+          )}
           {section === 'public' && (
             <a className="lang-toggle" href={lang === 'ko' ? 'en/' : '../'}>
               {lang === 'ko' ? 'EN' : 'KR'}
             </a>
           )}
           {section === 'private' && (
-            <button className="lang-toggle" onClick={() => { setSection('public'); setPage('portfolio'); setOpen(false); }}>
+            <button className="lang-toggle" onClick={() => { setSection('public'); setPage('portfolio'); setOpen(false); history.replaceState(null,'',location.pathname); sessionStorage.removeItem('hub_private_auth'); }}>
               PUBLIC
             </button>
           )}
@@ -388,6 +395,52 @@ function GoalProgress({ goals, setGoals }) {
 }
 
 // ===== Dashboard Page =====
+function VisitorStats() {
+  const [daily, setDaily] = useState([]);
+  const [counts, setCounts] = useState({ today: 0, total: 0 });
+  const [days, setDays] = useState(30);
+
+  useEffect(() => {
+    fetch('/api/counter').then(r => r.json()).then(setCounts).catch(() => {});
+    fetch(`/api/counter?action=daily&days=${days}`).then(r => r.json()).then(d => setDaily(d || [])).catch(() => {});
+  }, [days]);
+
+  const maxCount = Math.max(...daily.map(d => d.count), 1);
+
+  return (
+    <div className="card">
+      <div className="card-header" style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+        <h3 className="card-title">방문자 통계</h3>
+        <div style={{display:'flex',gap:8,alignItems:'center'}}>
+          <span className="text-sm" style={{color:'var(--text-muted)'}}>Today <strong style={{color:'var(--text)'}}>{counts.today}</strong></span>
+          <span style={{opacity:0.3}}>|</span>
+          <span className="text-sm" style={{color:'var(--text-muted)'}}>Total <strong style={{color:'var(--text)'}}>{counts.total}</strong></span>
+        </div>
+      </div>
+      <div className="card-body">
+        <div style={{display:'flex',gap:6,marginBottom:12}}>
+          {[7,14,30].map(d => (
+            <button key={d} className={`btn btn-sm ${days===d?'btn-primary':''}`} onClick={()=>setDays(d)} style={{fontSize:12,padding:'4px 10px'}}>{d}일</button>
+          ))}
+        </div>
+        {daily.length === 0 ? (
+          <div className="empty-state"><div className="empty-state-icon">📊</div><div className="empty-state-text">아직 방문 데이터가 없습니다</div></div>
+        ) : (
+          <div className="vs-chart">
+            {daily.map(d => (
+              <div key={d.date} className="vs-bar-col">
+                <span className="vs-bar-count">{d.count}</span>
+                <div className="vs-bar" style={{height:`${Math.max((d.count/maxCount)*120, 4)}px`}} />
+                <span className="vs-bar-date">{new Date(d.date + 'T00:00:00').toLocaleDateString('ko-KR',{month:'numeric',day:'numeric'})}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function Dashboard() {
   const [todos, setTodos] = useStore('todos', []);
   const [ideas, setIdeas] = useStore('ideas', []);
@@ -404,6 +457,7 @@ function Dashboard() {
         <div className="col-span-2"><Calendar /></div>
         <QuickStats todos={todos} ideas={ideas} habits={habits} goals={goals} />
       </div>
+      <div className="mt-lg"><VisitorStats /></div>
       <div className="grid grid-2 mt-lg">
         <TodoList todos={todos} setTodos={setTodos} />
         <IdeasBoard ideas={ideas} setIdeas={setIdeas} />
@@ -542,6 +596,51 @@ function usePosts(lang) {
       .catch(() => {});
   }, [lang]);
   return posts;
+}
+
+function useVisitorCount() {
+  const [counts, setCounts] = useState({ today: 0, total: 0 });
+  useEffect(() => {
+    let visitorId = localStorage.getItem('hub_visitor_id');
+    if (!visitorId) {
+      visitorId = crypto.randomUUID();
+      localStorage.setItem('hub_visitor_id', visitorId);
+    }
+    const visited = sessionStorage.getItem('hub_visited');
+    if (!visited) {
+      sessionStorage.setItem('hub_visited', '1');
+      fetch('/api/counter', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ visitorId }) })
+        .then(r => r.json()).then(setCounts).catch(() => {});
+    } else {
+      fetch('/api/counter').then(r => r.json()).then(setCounts).catch(() => {});
+    }
+  }, []);
+  return counts;
+}
+
+function useYoutubeVideos(channelId, count = 3) {
+  const [videos, setVideos] = useState([]);
+  useEffect(() => {
+    if (!channelId) return;
+    fetch(`/api/youtube?channelId=${channelId}`)
+      .then(r => r.text())
+      .then(xml => {
+        const doc = new DOMParser().parseFromString(xml, 'text/xml');
+        const entries = doc.querySelectorAll('entry');
+        const items = [];
+        for (let i = 0; i < Math.min(entries.length, count); i++) {
+          const e = entries[i];
+          const videoId = e.querySelector('videoId')?.textContent;
+          const title = e.querySelector('title')?.textContent;
+          const published = e.querySelector('published')?.textContent;
+          const thumb = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+          items.push({ videoId, title, published, thumb });
+        }
+        setVideos(items);
+      })
+      .catch(() => {});
+  }, [channelId, count]);
+  return videos;
 }
 
 // ===== Board Detail Component =====
@@ -757,6 +856,7 @@ function Portfolio({ lang = 'ko' }) {
   const [projects] = useStore('mainProjects', DEFAULT_PROJECTS);
   const [bio] = useStore('mainBio', DEFAULT_BIO);
   const [youtube] = useStore('mainYoutube', DEFAULT_YOUTUBE);
+  const ytVideos = useYoutubeVideos(youtube.channelId);
   const [contacts] = useStore('mainContacts', DEFAULT_CONTACTS);
 
   const geoPosts = posts.filter(p => p.cat === '지리' || p.cat === 'Geography');
@@ -778,11 +878,11 @@ function Portfolio({ lang = 'ko' }) {
       });
     }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
 
-    document.querySelectorAll('.s-project-card, .s-post-card, .s-stat-card, .s-contact-card, .s-youtube-card').forEach(el => {
+    document.querySelectorAll('.s-project-card, .s-post-card, .s-stat-card, .s-contact-card, .s-youtube-card, .s-yt-video-card').forEach(el => {
       observer.observe(el);
     });
     return () => observer.disconnect();
-  }, [posts, selectedPost]);
+  }, [posts, selectedPost, ytVideos]);
 
   if (selectedPost) {
     return (
@@ -934,6 +1034,20 @@ function Portfolio({ lang = 'ko' }) {
               <a href={youtube.url} target="_blank" rel="noopener noreferrer" className="s-yt-link">채널 방문하기 →</a>
             </div>
           </div>
+          {ytVideos.length > 0 && (
+            <div className="s-projects-grid" style={{marginTop:'2rem'}}>
+              {ytVideos.map(v => (
+                <a key={v.videoId} href={`https://www.youtube.com/watch?v=${v.videoId}`} target="_blank" rel="noopener noreferrer" className="s-post-card s-yt-video-card" style={{textDecoration:'none',color:'inherit',borderBottom:'none'}}>
+                  <div className="s-yt-thumb-wrap">
+                    <img src={v.thumb} alt={v.title} className="s-yt-thumb" />
+                    <div className="s-yt-play-overlay">▶</div>
+                  </div>
+                  <h3 className="s-project-name" style={{marginTop:'0.75rem'}}>{v.title}</h3>
+                  <div className="s-project-date">{new Date(v.published).toLocaleDateString('ko-KR')}</div>
+                </a>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -2023,6 +2137,26 @@ function MainPageEditor() {
     setProjects(arr);
   };
 
+  const dragRef = useRef(null);
+  const [dragOver, setDragOver] = useState(null);
+  const handleDrag = (list, setList) => ({
+    onDragStart: (e, i) => { dragRef.current = i; e.currentTarget.classList.add('dragging'); },
+    onDragEnd: (e) => { e.currentTarget.classList.remove('dragging'); setDragOver(null); },
+    onDragOver: (e, i) => { e.preventDefault(); if (dragRef.current !== i) setDragOver(i); },
+    onDragLeave: () => {},
+    onDrop: (e, i) => {
+      e.preventDefault();
+      const from = dragRef.current;
+      setDragOver(null);
+      if (from === null || from === i) return;
+      const arr = [...list];
+      const [item] = arr.splice(from, 1);
+      arr.splice(i, 0, item);
+      setList(arr);
+      dragRef.current = null;
+    },
+  });
+
   const startEditContact = (i) => { setCForm({...contacts[i]}); setEditIdx(i); };
   const saveContact = () => {
     if (!cForm.label) return;
@@ -2110,20 +2244,23 @@ function MainPageEditor() {
                 </div>
               </div>
             )}
-            {projects.map((p, i) => (
-              <div key={i} className="post-manage-item">
+            {projects.map((p, i) => {
+              const d = handleDrag(projects, setProjects);
+              return (
+              <div key={i} className={`post-manage-item drag-item${dragOver===i && dragRef.current!==i ? ' drag-over' : ''}${dragRef.current===i ? ' dragging' : ''}`} draggable
+                onDragStart={e=>d.onDragStart(e,i)} onDragEnd={d.onDragEnd} onDragOver={e=>d.onDragOver(e,i)} onDrop={e=>d.onDrop(e,i)}>
+                <span className="drag-handle" title="드래그하여 순서 변경">⠿</span>
                 <div style={{flex:1,minWidth:0}}>
                   <div className="text-sm text-bold" style={{display:'flex',alignItems:'center',gap:6}}>{p.icon?.startsWith('data:') ? <img src={p.icon} alt="" style={{width:18,height:18,objectFit:'contain'}} /> : p.icon} {p.name}</div>
                   <div className="text-sm text-muted" style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.url}</div>
                 </div>
                 <div className="flex gap-xs">
                   <button className="btn btn-icon btn-sm" onClick={()=>startEditProject(i)} title="수정">✏️</button>
-                  <button className="btn btn-icon btn-sm" onClick={()=>moveProject(i,-1)} title="위로">↑</button>
-                  <button className="btn btn-icon btn-sm" onClick={()=>moveProject(i,1)} title="아래로">↓</button>
                   <button className="btn btn-icon btn-sm btn-danger" onClick={()=>{if(confirm('삭제?'))setProjects(projects.filter((_,j)=>j!==i));}} title="삭제">🗑️</button>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -2312,15 +2449,20 @@ function MainPageEditor() {
                 </div>
               </div>
             )}
-            {contacts.map((c, i) => (
-              <div key={i} className="post-manage-item">
-                <div><span>{c.icon}</span> <span className="text-bold">{c.label}</span> <span className="text-sm text-muted">— {c.value}</span></div>
+            {contacts.map((c, i) => {
+              const d = handleDrag(contacts, setContacts);
+              return (
+              <div key={i} className={`post-manage-item drag-item${dragOver===i && dragRef.current!==i ? ' drag-over' : ''}${dragRef.current===i ? ' dragging' : ''}`} draggable
+                onDragStart={e=>d.onDragStart(e,i)} onDragEnd={d.onDragEnd} onDragOver={e=>d.onDragOver(e,i)} onDrop={e=>d.onDrop(e,i)}>
+                <span className="drag-handle" title="드래그하여 순서 변경">⠿</span>
+                <div style={{flex:1}}><span>{c.icon}</span> <span className="text-bold">{c.label}</span> <span className="text-sm text-muted">— {c.value}</span></div>
                 <div className="flex gap-xs">
                   <button className="btn btn-icon btn-sm" onClick={()=>startEditContact(i)}>✏️</button>
                   <button className="btn btn-icon btn-sm btn-danger" onClick={()=>setContacts(contacts.filter((_,j)=>j!==i))}>🗑️</button>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -2342,28 +2484,38 @@ function Footer({ lang = 'ko' }) {
 // ===== Main App =====
 function App() {
   const lang = window.HUB_LANG || 'ko';
-  const [section, setSection] = useState(() => ls.get('section', 'public'));
-  const [page, setPage] = useState(() => {
-    const s = ls.get('section', 'public');
-    return s === 'public' ? 'portfolio' : 'dashboard';
-  });
+  const [section, setSection] = useState('public');
+  const [page, setPage] = useState('portfolio');
   const [dark, setDark] = useState(() => ls.get('dark', false));
+  const visitorCounts = useVisitorCount();
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
     ls.set('dark', dark);
   }, [dark]);
 
-  useEffect(() => { ls.set('section', section); }, [section]);
-
-  // Hash-based routing — #private enters private mode
+  // Hash-based routing — #private enters private mode with password
   useEffect(() => {
+    const PRIVATE_HASH = '212121';
     const onHash = () => {
       const hash = location.hash.slice(1);
       if (!hash || hash === 'portfolio') { setSection('public'); setPage('portfolio'); return; }
-      if (hash === 'private') { setSection('private'); setPage('dashboard'); return; }
       const privatePages = ['dashboard', 'main-edit', 'tools', 'diary', 'pdfs', 'write'];
-      if (privatePages.includes(hash)) { setSection('private'); setPage(hash); }
+      if (hash === PRIVATE_HASH || hash === 'private' || privatePages.includes(hash)) {
+        const authed = sessionStorage.getItem('hub_private_auth');
+        if (!authed) {
+          const pw = prompt('비밀번호를 입력하세요');
+          if (pw !== '212121') {
+            history.replaceState(null, '', location.pathname);
+            setSection('public'); setPage('portfolio');
+            return;
+          }
+          sessionStorage.setItem('hub_private_auth', '1');
+        }
+        setSection('private');
+        setPage(privatePages.includes(hash) ? hash : 'dashboard');
+        return;
+      }
     };
     window.addEventListener('hashchange', onHash);
     onHash();
@@ -2387,7 +2539,7 @@ function App() {
 
   return (
     <>
-      <Nav page={page} setPage={setPage} dark={dark} setDark={setDark} section={section} setSection={setSection} lang={lang} />
+      <Nav page={page} setPage={setPage} dark={dark} setDark={setDark} section={section} setSection={setSection} lang={lang} visitorCounts={visitorCounts} />
       {renderPage()}
       <Footer lang={lang} />
     </>
