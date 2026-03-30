@@ -138,23 +138,6 @@
     ]
   },
   {
-    "id": 8,
-    "cat": {
-      "ko": "글",
-      "en": "Article"
-    },
-    "title": {
-      "ko": "GIS 데이터 처리 가이드",
-      "en": "GIS Data Processing Guide"
-    },
-    "desc": {
-      "ko": "DEM, Slope, Aspect 등 지형 분석 기법에 대한 실전 가이드.",
-      "en": "Practical guide on terrain analysis techniques including DEM, Slope, and Aspect."
-    },
-    "date": "2024-09",
-    "file": "2024-09-gis-guide.md"
-  },
-  {
     "id": 1774877541409,
     "cat": {
       "ko": "지리",
