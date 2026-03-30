@@ -155,23 +155,6 @@
     "file": "2024-09-gis-guide.md"
   },
   {
-    "id": 9,
-    "cat": {
-      "ko": "글",
-      "en": "Article"
-    },
-    "title": {
-      "ko": "Python 자동화 PPT 생성",
-      "en": "Python Automated PPT Generation"
-    },
-    "desc": {
-      "ko": "python-pptx를 활용한 프레젠테이션 자동 생성 방법론.",
-      "en": "How to automatically generate presentations using python-pptx."
-    },
-    "date": "2025-01",
-    "file": "2025-01-python-ppt.md"
-  },
-  {
     "id": 1774877541409,
     "cat": {
       "ko": "지리",
