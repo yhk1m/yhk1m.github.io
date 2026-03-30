@@ -859,8 +859,17 @@ function Portfolio({ lang = 'ko' }) {
   const ytVideos = useYoutubeVideos(youtube.channelId);
   const [contacts] = useStore('mainContacts', DEFAULT_CONTACTS);
 
-  const geoPosts = posts.filter(p => p.cat === '지리' || p.cat === 'Geography');
-  const notesPosts = posts.filter(p => p.cat === '글' || p.cat === 'Article');
+  const [geoOrder] = useStore('geoPostOrder', []);
+  const [notesOrder] = useStore('notesPostOrder', []);
+  const sortByOrder = (list, order) => {
+    if (!order.length) return list;
+    const map = new Map(list.map(p => [p.id, p]));
+    const sorted = order.filter(id => map.has(id)).map(id => map.get(id));
+    list.forEach(p => { if (!order.includes(p.id)) sorted.push(p); });
+    return sorted;
+  };
+  const geoPosts = sortByOrder(posts.filter(p => p.cat === '지리' || p.cat === 'Geography'), geoOrder);
+  const notesPosts = sortByOrder(posts.filter(p => p.cat === '글' || p.cat === 'Article'), notesOrder);
 
   // Scroll reveal
   useEffect(() => {
@@ -2108,8 +2117,17 @@ function MainPageEditor() {
   const [youtube, setYoutube] = useStore('mainYoutube', DEFAULT_YOUTUBE);
   const [contacts, setContacts] = useStore('mainContacts', DEFAULT_CONTACTS);
   const allPosts = usePosts('ko');
-  const geoPosts = allPosts.filter(p => p.cat === '지리');
-  const notesPosts = allPosts.filter(p => p.cat === '글');
+  const [geoOrder, setGeoOrder] = useStore('geoPostOrder', []);
+  const [notesOrder, setNotesOrder] = useStore('notesPostOrder', []);
+  const sortByOrder = (posts, order) => {
+    if (!order.length) return posts;
+    const map = new Map(posts.map(p => [p.id, p]));
+    const sorted = order.filter(id => map.has(id)).map(id => map.get(id));
+    posts.forEach(p => { if (!order.includes(p.id)) sorted.push(p); });
+    return sorted;
+  };
+  const geoPosts = sortByOrder(allPosts.filter(p => p.cat === '지리'), geoOrder);
+  const notesPosts = sortByOrder(allPosts.filter(p => p.cat === '글'), notesOrder);
 
   const [editTab, setEditTab] = useState('hero');
   const [editIdx, setEditIdx] = useState(null);
@@ -2367,8 +2385,12 @@ function MainPageEditor() {
             {geoPosts.length === 0 && (
               <div className="empty-state"><div className="empty-state-icon">🌍</div><div className="empty-state-text">아직 Geo 게시물이 없습니다</div></div>
             )}
-            {geoPosts.map(p => (
-              <div key={p.id} className="post-manage-item">
+            {geoPosts.map((p, i) => {
+              const d = handleDrag(geoPosts, arr => setGeoOrder(arr.map(x=>x.id)));
+              return (
+              <div key={p.id} className={`post-manage-item drag-item${dragOver===i && dragRef.current!==i ? ' drag-over' : ''}${dragRef.current===i ? ' dragging' : ''}`} draggable
+                onDragStart={e=>d.onDragStart(e,i)} onDragEnd={d.onDragEnd} onDragOver={e=>d.onDragOver(e,i)} onDrop={e=>d.onDrop(e,i)}>
+                <span className="drag-handle">⠿</span>
                 <div style={{flex:1,minWidth:0}}>
                   <div className="flex gap-sm" style={{alignItems:'center',marginBottom:4}}>
                     <span className="badge">지리</span>
@@ -2378,7 +2400,8 @@ function MainPageEditor() {
                   <div className="text-sm text-muted" style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.desc}</div>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -2395,8 +2418,12 @@ function MainPageEditor() {
             {notesPosts.length === 0 && (
               <div className="empty-state"><div className="empty-state-icon">📝</div><div className="empty-state-text">아직 Notes 게시물이 없습니다</div></div>
             )}
-            {notesPosts.map(p => (
-              <div key={p.id} className="post-manage-item">
+            {notesPosts.map((p, i) => {
+              const d = handleDrag(notesPosts, arr => setNotesOrder(arr.map(x=>x.id)));
+              return (
+              <div key={p.id} className={`post-manage-item drag-item${dragOver===i && dragRef.current!==i ? ' drag-over' : ''}${dragRef.current===i ? ' dragging' : ''}`} draggable
+                onDragStart={e=>d.onDragStart(e,i)} onDragEnd={d.onDragEnd} onDragOver={e=>d.onDragOver(e,i)} onDrop={e=>d.onDrop(e,i)}>
+                <span className="drag-handle">⠿</span>
                 <div style={{flex:1,minWidth:0}}>
                   <div className="flex gap-sm" style={{alignItems:'center',marginBottom:4}}>
                     <span className="badge">글</span>
@@ -2406,7 +2433,8 @@ function MainPageEditor() {
                   <div className="text-sm text-muted" style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.desc}</div>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
