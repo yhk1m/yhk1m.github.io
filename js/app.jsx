@@ -2565,11 +2565,19 @@ function App() {
     }
   };
 
+  const [showTop, setShowTop] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setShowTop(window.scrollY > 400);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   return (
     <>
       <Nav page={page} setPage={setPage} dark={dark} setDark={setDark} section={section} setSection={setSection} lang={lang} visitorCounts={visitorCounts} />
       {renderPage()}
       <Footer lang={lang} />
+      <button className={`top-btn${showTop ? ' visible' : ''}`} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} aria-label="Top">↑</button>
     </>
   );
 }
