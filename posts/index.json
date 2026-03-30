@@ -1,38 +1,5 @@
 [
   {
-    "id": 1,
-    "cat": {
-      "ko": "프로그램",
-      "en": "Program"
-    },
-    "title": {
-      "ko": "Personal Hub",
-      "en": "Personal Hub"
-    },
-    "desc": {
-      "ko": "스케줄링, 포트폴리오, 도구함을 통합한 개인 웹 플랫폼. React 기반 SPA.",
-      "en": "스케줄링, 포트폴리오, 도구함을 통합한 개인 웹 플랫폼. React 기반 SPA."
-    },
-    "date": "2026-03",
-    "file": "2026-03-personal-hub.md",
-    "tech": [
-      "React 18",
-      "Vanilla CSS",
-      "localStorage",
-      "Babel"
-    ],
-    "links": [
-      {
-        "label": "GitHub",
-        "url": "https://github.com/yhk1m/yhk1m.github.io"
-      },
-      {
-        "label": "Live",
-        "url": "https://yhk1m.github.io"
-      }
-    ]
-  },
-  {
     "id": 2,
     "cat": {
       "ko": "프로그램",
