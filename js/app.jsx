@@ -12,6 +12,22 @@ function useStore(key, initial) {
   return [val, setVal];
 }
 
+const SITE_JSON_PATH = 'data/site.json';
+const SITE_JSON_PATH_EN = '../data/site.json';
+const GH_REPO = 'yhk1m/yhk1m.github.io';
+
+function useSiteData() {
+  const [data, setData] = useState(null);
+  useEffect(() => {
+    const path = window.HUB_LANG === 'en' ? SITE_JSON_PATH_EN : SITE_JSON_PATH;
+    fetch(path + '?t=' + Date.now())
+      .then(r => r.json())
+      .then(setData)
+      .catch(() => {});
+  }, []);
+  return data;
+}
+
 const today = () => new Date().toISOString().slice(0, 10);
 const WEEKDAYS = ['일','월','화','수','목','금','토'];
 const MOODS = [{icon:'😊',label:'좋음'},{icon:'😌',label:'평온'},{icon:'😐',label:'보통'},{icon:'😢',label:'슬픔'},{icon:'😡',label:'화남'}];
@@ -800,12 +816,13 @@ function Portfolio({ lang = 'ko' }) {
   const posts = usePosts(lang);
   const [selectedPost, setSelectedPost] = useState(null);
 
-  const [hero] = useStore('mainHero', DEFAULT_HERO);
-  const [projects] = useStore('mainProjects', DEFAULT_PROJECTS);
-  const [bio] = useStore('mainBio', DEFAULT_BIO);
-  const [youtube] = useStore('mainYoutube', DEFAULT_YOUTUBE);
+  const siteData = useSiteData();
+  const hero = siteData?.hero ?? DEFAULT_HERO;
+  const projects = siteData?.projects ?? DEFAULT_PROJECTS;
+  const bio = siteData?.bio ?? DEFAULT_BIO;
+  const youtube = siteData?.youtube ?? DEFAULT_YOUTUBE;
   const ytVideos = useYoutubeVideos(youtube.channelId);
-  const [contacts] = useStore('mainContacts', DEFAULT_CONTACTS);
+  const contacts = siteData?.contacts ?? DEFAULT_CONTACTS;
 
   const [geoOrder] = useStore('geoPostOrder', []);
   const [notesOrder] = useStore('notesPostOrder', []);
@@ -2052,13 +2069,60 @@ function PostEditor() {
   );
 }
 
+// ===== GitHub API: save site.json =====
+async function saveSiteJsonToGitHub(token, data) {
+  const path = 'data/site.json';
+  const url = `https://api.github.com/repos/${GH_REPO}/contents/${path}`;
+  const headers = { Authorization: `token ${token}`, 'Content-Type': 'application/json' };
+  // get current sha
+  const existing = await fetch(url, { headers }).then(r => r.json()).catch(() => null);
+  const sha = existing?.sha;
+  const content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
+  const res = await fetch(url, {
+    method: 'PUT', headers,
+    body: JSON.stringify({ message: '메인 페이지 업데이트', content, sha }),
+  });
+  if (!res.ok) throw new Error('저장 실패: ' + res.status);
+  return res.json();
+}
+
 // ===== Main Page Editor =====
 function MainPageEditor() {
-  const [hero, setHero] = useStore('mainHero', DEFAULT_HERO);
-  const [projects, setProjects] = useStore('mainProjects', DEFAULT_PROJECTS);
-  const [bio, setBio] = useStore('mainBio', DEFAULT_BIO);
-  const [youtube, setYoutube] = useStore('mainYoutube', DEFAULT_YOUTUBE);
-  const [contacts, setContacts] = useStore('mainContacts', DEFAULT_CONTACTS);
+  const siteData = useSiteData();
+  const [hero, setHero] = useState(DEFAULT_HERO);
+  const [projects, setProjects] = useState(DEFAULT_PROJECTS);
+  const [bio, setBio] = useState(DEFAULT_BIO);
+  const [youtube, setYoutube] = useState(DEFAULT_YOUTUBE);
+  const [contacts, setContacts] = useState(DEFAULT_CONTACTS);
+  const [loaded, setLoaded] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState(null);
+  const [token] = useStore('gh_token', '');
+
+  // Load from site.json when fetched
+  useEffect(() => {
+    if (siteData && !loaded) {
+      if (siteData.hero) setHero(siteData.hero);
+      if (siteData.projects) setProjects(siteData.projects);
+      if (siteData.bio) setBio(siteData.bio);
+      if (siteData.youtube) setYoutube(siteData.youtube);
+      if (siteData.contacts) setContacts(siteData.contacts);
+      setLoaded(true);
+    }
+  }, [siteData]);
+
+  const handleDeploy = async () => {
+    if (!token) { setSaveMsg('⚠️ GitHub 토큰이 필요합니다. 글쓰기 탭에서 토큰을 설정해주세요.'); return; }
+    setSaving(true); setSaveMsg(null);
+    try {
+      await saveSiteJsonToGitHub(token, { hero, bio, projects, youtube, contacts });
+      setSaveMsg('✅ 저장 완료! 1~2분 후 모든 기기에 반영됩니다.');
+    } catch (e) {
+      setSaveMsg('❌ ' + e.message);
+    }
+    setSaving(false);
+  };
+
   const allPosts = usePosts('ko');
   const [geoOrder, setGeoOrder] = useStore('geoPostOrder', []);
   const [notesOrder, setNotesOrder] = useStore('notesPostOrder', []);
@@ -2138,6 +2202,12 @@ function MainPageEditor() {
       <div className="page-header">
         <h1 className="page-title">메인 페이지 편집</h1>
         <p className="text-muted">공개 페이지의 콘텐츠를 수정합니다</p>
+        <div className="mt-md" style={{display:'flex',alignItems:'center',gap:12}}>
+          <button className="btn btn-primary" onClick={handleDeploy} disabled={saving}>
+            {saving ? '저장 중...' : '💾 저장 및 배포'}
+          </button>
+          {saveMsg && <span className="text-sm">{saveMsg}</span>}
+        </div>
       </div>
 
       <div className="tabs">
