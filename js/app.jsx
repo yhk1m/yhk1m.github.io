@@ -300,8 +300,8 @@ function IdeasBoard({ ideas, setIdeas }) {
 // ===== Dashboard: Habit Tracker =====
 function HabitTracker({ habits, setHabits }) {
   const [newHabit, setNewHabit] = useState('');
-  const habitNames = useStore('habitNames', ['운동','독서','명상'])[0];
-  const [names, setNames] = useStore('habitNames', ['운동','독서','명상']);
+  const habitNames = useStore('habitNames', [])[0];
+  const [names, setNames] = useStore('habitNames', []);
 
   const d = new Date();
   const weekDates = Array.from({length:7}, (_,i) => {
@@ -473,64 +473,12 @@ function Dashboard() {
 // ===== Translations =====
 const TEXTS = {
   ko: {
-    hero: { line1:'안녕하세요,', name:'김용현', line2:'입니다',
-      subtitle:'기술과 콘텐츠로 가치를 만드는 크리에이터\n끊임없이 배우고, 나누고, 성장합니다' },
-    tabs: { bio:'Bio', geo:'Geo', notes:'Notes', labs:'Labs' },
-    aboutTitle: 'About Me',
-    aboutP1: '다양한 분야에 관심을 가지고 끊임없이 도전하는 크리에이터입니다. 프로그래밍, GIS, 콘텐츠 제작 등 여러 영역을 넘나들며 기술적 역량과 창의적 표현력을 동시에 키워가고 있습니다.',
-    aboutP2: '유튜브와 블로그를 통해 배운 것들을 나누고, 출판을 통해 더 깊은 지식을 전달하고 있습니다. 함께 성장하는 것을 가장 가치있게 생각합니다.',
-    skills: ['Python','JavaScript','React','HTML/CSS','GIS','QGIS','데이터분석','콘텐츠제작','프레젠테이션','기획','글쓰기','영상편집'],
-    skillGroups: [
-      { label: 'DEVELOPMENT', items: ['Python','JavaScript','React','HTML/CSS'] },
-      { label: 'GIS & DATA', items: ['GIS','QGIS','데이터분석'] },
-      { label: 'CONTENT', items: ['콘텐츠제작','프레젠테이션','기획','글쓰기','영상편집'] },
-    ],
-    timeline: [
-      { year:'2026', title:'개인 허브 웹페이지 개발', desc:'스케줄링, 포트폴리오, 도구함을 통합한 개인 웹 플랫폼 구축' },
-      { year:'2025', title:'자기소개 프레젠테이션 제작', desc:'Python 기반 자동 PPT 생성 시스템 개발' },
-      { year:'2024', title:'GIS/공간정보 프로젝트', desc:'지형 분석 및 공간 데이터 처리 (DEM, Slope, Aspect)' },
-      { year:'2023', title:'콘텐츠 크리에이터 활동', desc:'유튜브, 블로그를 통한 지식 공유 및 커뮤니티 형성' },
-    ],
-    works: [
-      { type:'YouTube', icon:'🎬', title:'교육 콘텐츠 채널', desc:'프로그래밍, 기술 관련 영상 제작' },
-      { type:'Blog', icon:'📰', title:'기술 블로그', desc:'개발 경험과 인사이트 공유' },
-      { type:'Publication', icon:'📚', title:'출판 활동', desc:'전문 지식을 책으로 엮어 독자와 소통' },
-      { type:'Project', icon:'🔬', title:'GIS 프로젝트', desc:'공간정보 분석 및 시각화' },
-      { type:'Education', icon:'🎓', title:'교육 활동', desc:'지식 나눔과 멘토링' },
-      { type:'Open Source', icon:'💻', title:'오픈소스 기여', desc:'커뮤니티와 함께 성장하는 개발' },
-    ],
     filterAll: '전체',
     boardBack: '← 목록으로',
     boardTech: '기술 스택',
     boardLoading: '불러오는 중...',
   },
   en: {
-    hero: { line1:"Hello, I'm", name:'Yonghyun Kim', line2:'',
-      subtitle:'A creator who builds value through technology and content\nConstantly learning, sharing, and growing' },
-    tabs: { bio:'Bio', geo:'Geo', notes:'Notes', labs:'Labs' },
-    aboutTitle: 'About Me',
-    aboutP1: 'I am a creator who constantly challenges myself across diverse fields. Navigating through programming, GIS, and content creation, I continue to develop both technical skills and creative expression.',
-    aboutP2: 'I share what I learn through YouTube and my blog, and deliver deeper knowledge through publications. I value growing together above all.',
-    skills: ['Python','JavaScript','React','HTML/CSS','GIS','QGIS','Data Analysis','Content Creation','Presentation','Planning','Writing','Video Editing'],
-    skillGroups: [
-      { label: 'DEVELOPMENT', items: ['Python','JavaScript','React','HTML/CSS'] },
-      { label: 'GIS & DATA', items: ['GIS','QGIS','Data Analysis'] },
-      { label: 'CONTENT', items: ['Content Creation','Presentation','Planning','Writing','Video Editing'] },
-    ],
-    timeline: [
-      { year:'2026', title:'Personal Hub Website', desc:'Built an integrated personal platform with scheduling, portfolio, and productivity tools' },
-      { year:'2025', title:'Automated Presentation System', desc:'Developed a Python-based automatic PPT generation system' },
-      { year:'2024', title:'GIS / Spatial Information Project', desc:'Terrain analysis and spatial data processing (DEM, Slope, Aspect)' },
-      { year:'2023', title:'Content Creator Activities', desc:'Knowledge sharing and community building through YouTube and blog' },
-    ],
-    works: [
-      { type:'YouTube', icon:'🎬', title:'Educational Channel', desc:'Creating programming and tech-related videos' },
-      { type:'Blog', icon:'📰', title:'Tech Blog', desc:'Sharing development experiences and insights' },
-      { type:'Publication', icon:'📚', title:'Publications', desc:'Communicating expertise through books' },
-      { type:'Project', icon:'🔬', title:'GIS Projects', desc:'Spatial information analysis and visualization' },
-      { type:'Education', icon:'🎓', title:'Education', desc:'Knowledge sharing and mentoring' },
-      { type:'Open Source', icon:'💻', title:'Open Source', desc:'Growing together with the community' },
-    ],
     filterAll: 'All',
     boardBack: '← Back to list',
     boardTech: 'Tech Stack',
@@ -1203,9 +1151,7 @@ function PomodoroTimer() {
 
 // ===== Tools: D-Day =====
 function DDayCounter() {
-  const [items, setItems] = useStore('ddays', [
-    { id:1, name:'새해', date:'2027-01-01' },
-  ]);
+  const [items, setItems] = useStore('ddays', []);
   const [show, setShow] = useState(false);
   const [form, setForm] = useState({ name:'', date:'' });
 
@@ -1253,10 +1199,7 @@ function DDayCounter() {
 
 // ===== Tools: Bookmarks =====
 function BookmarkManager() {
-  const [bookmarks, setBookmarks] = useStore('bookmarks', [
-    { id:1, title:'Google', url:'https://google.com', category:'검색' },
-    { id:2, title:'GitHub', url:'https://github.com', category:'개발' },
-  ]);
+  const [bookmarks, setBookmarks] = useStore('bookmarks', []);
   const [show, setShow] = useState(false);
   const [form, setForm] = useState({ title:'', url:'', category:'기타' });
 
