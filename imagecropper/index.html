@@ -826,10 +826,14 @@ function doCrop() {
   }
 
   canvas.toBlob(blob => {
+    const baseName = state.fileName.replace(/\.[^.]+$/, '');
+    const defaultName = baseName + '_cropped';
+    const inputName = prompt('저장할 파일 이름을 입력하세요', defaultName);
+    if (inputName === null) return;
+    const finalName = (inputName.trim() || defaultName) + '.' + ext;
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    const baseName = state.fileName.replace(/\.[^.]+$/, '');
-    a.download = baseName + '_cropped.' + ext;
+    a.download = finalName;
     a.href = url;
     a.click();
     URL.revokeObjectURL(url);
