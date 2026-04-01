@@ -1333,6 +1333,18 @@ function Tools() {
         <BookmarkManager />
         <ReadingList />
       </div>
+      <div className="mt-lg">
+        <h3 style={{marginBottom:'12px',fontWeight:600,fontSize:'0.95rem'}}>웹 도구</h3>
+        <div className="grid grid-2">
+          <a href="/imagecropper" target="_blank" rel="noopener" className="card" style={{textDecoration:'none',border:'1px solid var(--border)',cursor:'pointer',display:'flex',alignItems:'center',gap:'16px',transition:'var(--transition)'}}>
+            <span style={{fontSize:'1.6rem'}}>&#9986;</span>
+            <div>
+              <div style={{fontWeight:600,fontSize:'0.9rem',marginBottom:'2px'}}>이미지 크롭</div>
+              <div className="text-muted" style={{fontSize:'0.78rem'}}>화질 손실 없이 이미지 자르기</div>
+            </div>
+          </a>
+        </div>
+      </div>
     </div>
   );
 }
