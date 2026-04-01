@@ -7,6 +7,7 @@
 <title>이미지 크롭 — 비그늘</title>
 <meta name="description" content="화질 손실 없이 이미지를 크롭하는 도구">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
   /* --- Font --- */
   @font-face { font-family: 'Pretendard'; src: url('../fonts/Pretendard-Regular.woff2') format('woff2'); font-weight: 400; font-display: swap; }
@@ -421,7 +422,7 @@
 <div class="toolbar">
   <div class="toolbar-group">
     <label class="btn" for="fileInput">열기</label>
-    <input type="file" id="fileInput" accept="image/*">
+    <input type="file" id="fileInput" accept="image/*,application/pdf">
     <button class="btn" id="btnPaste" title="클립보드에서 붙여넣기">붙여넣기</button>
   </div>
 
@@ -453,6 +454,13 @@
     </select>
   </div>
 
+  <div class="toolbar-group" id="pdfPageGroup" style="display:none;">
+    <span class="toolbar-label">페이지</span>
+    <button class="btn-icon" id="btnPrevPage" disabled>&larr;</button>
+    <span style="font-size:0.78rem;" id="pageIndicator">1 / 1</span>
+    <button class="btn-icon" id="btnNextPage" disabled>&rarr;</button>
+  </div>
+
   <div class="toolbar-group">
     <button class="btn" id="btnReset" disabled>초기화</button>
     <button class="btn-primary btn" id="btnCrop" disabled>크롭 저장</button>
@@ -464,7 +472,7 @@
 <div class="canvas-area" id="canvasArea">
   <div class="drop-zone" id="dropZone">
     <div class="drop-icon">+</div>
-    <p>이미지를 드래그하거나 <span onclick="document.getElementById('fileInput').click()">파일 선택</span></p>
+    <p>이미지 또는 PDF를 드래그하거나 <span onclick="document.getElementById('fileInput').click()">파일 선택</span></p>
     <p class="drop-hint">Ctrl+V로 클립보드에서 붙여넣기 가능</p>
   </div>
 
@@ -501,7 +509,7 @@
 
 <div class="bottom-bar">
   <span id="statusText">이미지를 불러와주세요</span>
-  <span class="shortcuts">Ctrl+O 열기 &middot; Ctrl+V 붙여넣기 &middot; Enter 크롭 저장 &middot; Esc 초기화 &middot; +/- 확대/축소</span>
+  <span class="shortcuts">Ctrl+O 열기 &middot; Ctrl+V 붙여넣기 &middot; Enter 크롭 저장 &middot; Esc 초기화 &middot; +/- 확대/축소 &middot; &larr;/&rarr; PDF 페이지</span>
 </div>
 
 <canvas id="exportCanvas" style="display:none;"></canvas>
@@ -524,6 +532,9 @@ $('btnTheme').addEventListener('click', () => {
   $('themeIcon').textContent = isDark ? '\u263E' : '\u2600';
 });
 
+// PDF.js worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
 // State
 let state = {
   image: null,
@@ -541,6 +552,10 @@ let state = {
   cropStart: null,
   drawing: false,
   drawStart: null,
+  // PDF
+  pdfDoc: null,
+  pdfPage: 1,
+  pdfTotal: 0,
 };
 
 const fileInput = $('fileInput');
@@ -566,10 +581,22 @@ const ratioSep = $('ratioSep');
 // Image Loading
 // ========================
 
+function loadFile(file) {
+  if (!file) return;
+  if (file.type === 'application/pdf') {
+    loadPdf(file);
+  } else if (file.type.startsWith('image/')) {
+    loadImage(file);
+  }
+}
+
 function loadImage(file) {
-  if (!file || !file.type.startsWith('image/')) return;
   state.fileName = file.name;
   state.fileType = file.type;
+  state.pdfDoc = null;
+  state.pdfPage = 1;
+  state.pdfTotal = 0;
+  $('pdfPageGroup').style.display = 'none';
 
   const reader = new FileReader();
   reader.onload = e => {
@@ -583,6 +610,55 @@ function loadImage(file) {
     img.src = e.target.result;
   };
   reader.readAsDataURL(file);
+}
+
+async function loadPdf(file) {
+  state.fileName = file.name;
+  state.fileType = 'application/pdf';
+
+  statusText.textContent = 'PDF 로딩 중...';
+
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  state.pdfDoc = pdf;
+  state.pdfPage = 1;
+  state.pdfTotal = pdf.numPages;
+
+  $('pdfPageGroup').style.display = 'flex';
+  updatePageControls();
+  await renderPdfPage(1);
+}
+
+async function renderPdfPage(pageNum) {
+  if (!state.pdfDoc) return;
+  statusText.textContent = '페이지 렌더링 중...';
+
+  const page = await state.pdfDoc.getPage(pageNum);
+  const scale = 3; // high-res render for lossless crop
+  const viewport = page.getViewport({ scale });
+
+  const canvas = document.createElement('canvas');
+  canvas.width = viewport.width;
+  canvas.height = viewport.height;
+  const ctx = canvas.getContext('2d');
+
+  await page.render({ canvasContext: ctx, viewport }).promise;
+
+  const img = new Image();
+  img.onload = () => {
+    state.image = img;
+    state.naturalW = img.naturalWidth;
+    state.naturalH = img.naturalHeight;
+    showImage();
+    imageInfo.textContent = state.naturalW + ' \u00D7 ' + state.naturalH + 'px \u00B7 ' + state.fileName + ' (p.' + pageNum + '/' + state.pdfTotal + ')';
+  };
+  img.src = canvas.toDataURL('image/png');
+}
+
+function updatePageControls() {
+  $('pageIndicator').textContent = state.pdfPage + ' / ' + state.pdfTotal;
+  $('btnPrevPage').disabled = state.pdfPage <= 1;
+  $('btnNextPage').disabled = state.pdfPage >= state.pdfTotal;
 }
 
 function showImage() {
@@ -845,21 +921,29 @@ function doCrop() {
 // Events
 // ========================
 
-fileInput.addEventListener('change', e => { if (e.target.files[0]) loadImage(e.target.files[0]); });
+fileInput.addEventListener('change', e => { if (e.target.files[0]) loadFile(e.target.files[0]); });
 
 canvasArea.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
 canvasArea.addEventListener('dragleave', () => { dropZone.classList.remove('dragover'); });
 canvasArea.addEventListener('drop', e => {
   e.preventDefault();
   dropZone.classList.remove('dragover');
-  if (e.dataTransfer.files[0]) loadImage(e.dataTransfer.files[0]);
+  if (e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]);
+});
+
+// PDF page navigation
+$('btnPrevPage').addEventListener('click', async () => {
+  if (state.pdfPage > 1) { state.pdfPage--; updatePageControls(); await renderPdfPage(state.pdfPage); }
+});
+$('btnNextPage').addEventListener('click', async () => {
+  if (state.pdfPage < state.pdfTotal) { state.pdfPage++; updatePageControls(); await renderPdfPage(state.pdfPage); }
 });
 
 document.addEventListener('paste', e => {
   const items = e.clipboardData?.items;
   if (!items) return;
   for (const item of items) {
-    if (item.type.startsWith('image/')) { e.preventDefault(); loadImage(item.getAsFile()); return; }
+    if (item.type.startsWith('image/')) { e.preventDefault(); loadFile(item.getAsFile()); return; }
   }
 });
 
@@ -870,7 +954,7 @@ $('btnPaste').addEventListener('click', async () => {
       for (const type of item.types) {
         if (type.startsWith('image/')) {
           const blob = await item.getType(type);
-          loadImage(new File([blob], 'clipboard.png', { type }));
+          loadFile(new File([blob], 'clipboard.png', { type }));
           return;
         }
       }
@@ -896,6 +980,8 @@ document.addEventListener('keydown', e => {
   if (e.key === '=' || e.key === '+') { state.zoom = Math.min(state.zoom * 1.25, 5); applyZoom(); resetCrop(); }
   if (e.key === '-') { state.zoom = Math.max(state.zoom * 0.8, 0.1); applyZoom(); resetCrop(); }
   if (e.key === '0') { fitImageToView(); resetCrop(); }
+  if (e.key === 'ArrowLeft' && state.pdfDoc && state.pdfPage > 1) { state.pdfPage--; updatePageControls(); renderPdfPage(state.pdfPage); }
+  if (e.key === 'ArrowRight' && state.pdfDoc && state.pdfPage < state.pdfTotal) { state.pdfPage++; updatePageControls(); renderPdfPage(state.pdfPage); }
 });
 
 window.addEventListener('resize', () => { if (state.image) { fitImageToView(); resetCrop(); } });
