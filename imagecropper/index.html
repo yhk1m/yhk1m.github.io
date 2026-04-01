@@ -275,7 +275,8 @@
     position: absolute;
     top: 0; left: 0;
     width: 100%; height: 100%;
-    pointer-events: none;
+    pointer-events: auto;
+    cursor: crosshair;
   }
 
   .crop-box {
@@ -669,37 +670,38 @@ function enforceAspectRatio() {
 // Crop Drawing & Interaction
 // ========================
 
-function getCropOverlayCoords(e) {
+function getPointerCoords(e) {
+  const touch = e.touches ? e.touches[0] : e;
   const rect = imageContainer.getBoundingClientRect();
-  return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  return { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
 }
 
-cropBox.parentElement.addEventListener('mousedown', e => {
+function startDraw(e) {
   if (!state.image || e.target.closest('.crop-box')) return;
   e.preventDefault();
-  const pos = getCropOverlayCoords(e);
+  const pos = getPointerCoords(e);
   state.drawing = true;
   state.drawStart = pos;
   state.crop = { x: pos.x, y: pos.y, w: 0, h: 0 };
   cropBox.classList.remove('hidden');
   updateCropBox();
-});
+}
 
-cropBox.addEventListener('mousedown', e => {
+function startCropInteract(e) {
   e.preventDefault();
   e.stopPropagation();
   const handle = e.target.dataset?.handle;
   state.dragging = handle || 'move';
-  state.dragStart = getCropOverlayCoords(e);
+  state.dragStart = getPointerCoords(e);
   state.cropStart = { ...state.crop };
-});
+}
 
-window.addEventListener('mousemove', e => {
+function onPointerMove(e) {
   if (!state.image) return;
 
   if (state.drawing) {
     e.preventDefault();
-    const pos = getCropOverlayCoords(e);
+    const pos = getPointerCoords(e);
     const sx = state.drawStart.x, sy = state.drawStart.y;
     let x = Math.min(sx, pos.x), y = Math.min(sy, pos.y);
     let w = Math.abs(pos.x - sx), h = Math.abs(pos.y - sy);
@@ -718,7 +720,7 @@ window.addEventListener('mousemove', e => {
 
   if (state.dragging) {
     e.preventDefault();
-    const pos = getCropOverlayCoords(e);
+    const pos = getPointerCoords(e);
     const dx = pos.x - state.dragStart.x, dy = pos.y - state.dragStart.y;
     const c = state.cropStart;
     const ratio = getAspectRatio();
@@ -750,9 +752,9 @@ window.addEventListener('mousemove', e => {
     }
     updateCropBox();
   }
-});
+}
 
-window.addEventListener('mouseup', () => {
+function onPointerUp() {
   if (state.drawing) {
     state.drawing = false;
     if (state.crop && state.crop.w > 5 && state.crop.h > 5) {
@@ -762,7 +764,19 @@ window.addEventListener('mouseup', () => {
     }
   }
   state.dragging = null;
-});
+}
+
+// Mouse events
+cropBox.parentElement.addEventListener('mousedown', startDraw);
+cropBox.addEventListener('mousedown', startCropInteract);
+window.addEventListener('mousemove', onPointerMove);
+window.addEventListener('mouseup', onPointerUp);
+
+// Touch events
+cropBox.parentElement.addEventListener('touchstart', startDraw, { passive: false });
+cropBox.addEventListener('touchstart', startCropInteract, { passive: false });
+window.addEventListener('touchmove', onPointerMove, { passive: false });
+window.addEventListener('touchend', onPointerUp);
 
 function updateCropBox() {
   if (!state.crop) return;
