@@ -539,6 +539,16 @@ function VisitorCounter() {
 // ===== Posts Loader =====
 const postsBase = window.HUB_LANG === 'en' ? '../posts/' : 'posts/';
 
+// Resolve a possibly-nested i18n value ({ko,en}) to a plain string.
+// Unwraps accidental double-nesting so React never receives an object as a child.
+function pickLang(v, lang) {
+  let cur = v;
+  for (let i = 0; i < 5 && cur && typeof cur === 'object' && !Array.isArray(cur); i++) {
+    cur = cur[lang] ?? cur.ko ?? cur.en;
+  }
+  return typeof cur === 'string' ? cur : '';
+}
+
 function usePosts(lang) {
   const [posts, setPosts] = useState([]);
   useEffect(() => {
@@ -547,9 +557,9 @@ function usePosts(lang) {
       .then(data => {
         const mapped = data.map(p => ({
           id: p.id,
-          cat: p.cat[lang] || p.cat['ko'],
-          title: p.title[lang] || p.title['ko'],
-          desc: p.desc[lang] || p.desc['ko'],
+          cat: pickLang(p.cat, lang),
+          title: pickLang(p.title, lang),
+          desc: pickLang(p.desc, lang),
           date: p.date,
           file: p.file,
           tech: p.tech || [],
@@ -1790,7 +1800,7 @@ function PostEditor() {
         cat: { ko: form.cat, en: form.cat === '프로그램' ? 'Program' : form.cat === '지리' ? 'Geography' : 'Article' },
         title: { ko: form.title, en: form.title },
         desc: { ko: form.desc, en: form.desc },
-        date: form.date.slice(0, 7),
+        date: form.date,
         file: filename,
       };
       if (techArr.length) newEntry.tech = techArr;
@@ -1828,10 +1838,10 @@ function PostEditor() {
     setEditingId(post.id);
     setEditingFile(post.file || null);
     setForm({
-      title: post.title?.ko || post.title,
-      cat: post.cat?.ko || post.cat,
+      title: pickLang(post.title, 'ko'),
+      cat: pickLang(post.cat, 'ko') || '프로그램',
       date: post.date + (post.date.length === 7 ? '-01' : ''),
-      desc: post.desc?.ko || post.desc,
+      desc: pickLang(post.desc, 'ko'),
       tech: (post.tech || []).join(', '),
       links: (post.links || []).map(l => `${l.label}|${l.url}`).join('\n'),
       body: '',
