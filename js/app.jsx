@@ -47,7 +47,7 @@ const DEFAULT_HERO = {
   tags:['양정고등학교 지리교사','EdTech 개발','파노라마 모의고사','비그늘 YouTube'],
 };
 const DEFAULT_PROJECTS = [
-  {name:'GeoStatAtlas',icon:'🌍',desc:'세계 통계 지도 시각화 플랫폼. Robinson·Miller 투영법, 경제 블록 오버레이, Köppen 기후 필터링 등 수업용 인터랙티브 지도 제공.',tech:['D3.js','Leaflet','GAS','Google Sheets'],url:'https://geostatlas.yhk1m.kr'},
+  {name:'GeoStatAtlas',icon:'🌍',desc:'세계 통계 지도 시각화 플랫폼. Robinson·Miller 투영법, 경제 블록 오버레이, Köppen 기후 필터링 등 수업용 인터랙티브 지도 제공.',tech:['D3.js','Leaflet','GAS','Google Sheets'],url:'https://geostatatlas.bgnl.kr'},
   {name:'GeoTester',icon:'📝',desc:'지리 시험 문제 자동 생성기. Canvas 기반 그래프 렌더링, 좌표 변환, 모듈식 문항 아키텍처로 다양한 유형의 문제를 생성.',tech:['Canvas API','GAS','EPSG:5179'],url:'https://geotester.yhk1m.kr'},
   {name:'GeoGrapher',icon:'📊',desc:'지리 그래프 생성기. 6종 차트 타입, CSV 업로드, Google Sheets 연동, 한/영 UI 지원으로 수업 자료 제작에 최적화.',tech:['Canvas','Chart.js','CSV'],url:'https://geographer.yhk1m.kr'},
   {name:'LatLong Finder',icon:'📍',desc:'위경도 탐색 지도 도구. 12색 마커, 위경도 격자 오버레이, DMS/Decimal 전환, CSV·PNG 내보내기, TopoJSON 세계지도.',tech:['Leaflet.js','TopoJSON'],url:'https://latlongfinder.yhk1m.kr'},
