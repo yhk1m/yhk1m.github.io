@@ -77,11 +77,11 @@ const DEFAULT_BIO = {
     {date:'2023',title:'콘텐츠 크리에이터 활동 시작',desc:'유튜브, 블로그를 통한 지식 공유 및 커뮤니티 형성'},
   ],
 };
-const DEFAULT_YOUTUBE = {name:'비그늘 BGNL',handle:'@bgnlkr',channelId:'UC7BJiTmOsxfK9ItbRKaw1Mg',desc:'경제와 교육을 주제로 깊이 있는 콘텐츠를 만듭니다. 복잡한 개념을 명확하게, 교과서 너머의 시선으로 풀어냅니다.',url:'https://youtube.com/@bgnlkr'};
+const DEFAULT_YOUTUBE = {name:'비그늘 BGNL',handle:'@bgnlkr',channelId:'UC7BJiTmOsxfK9ItbRKaw1Mg',desc:'경제와 교육을 주제로 깊이 있는 콘텐츠를 만듭니다. 복잡한 개념을 명확하게, 교과서 너머의 시선으로 풀어냅니다.',url:'https://www.youtube.com/@bgnlkr'};
 const DEFAULT_CONTACTS = [
   {icon:'📸',label:'Instagram',value:'@yhk1m',url:'https://instagram.com/yhk1m'},
   {icon:'📝',label:'Blog',value:'rainshadow21',url:'https://blog.naver.com/rainshadow21'},
-  {icon:'🎬',label:'YouTube',value:'비그늘 BGNL',url:'https://youtube.com/@bgnlkr'},
+  {icon:'🎬',label:'YouTube',value:'비그늘 BGNL',url:'https://www.youtube.com/@bgnlkr'},
   {icon:'✉️',label:'Email',value:'rainshadow21@naver.com',url:'mailto:rainshadow21@naver.com'},
 ];
 
