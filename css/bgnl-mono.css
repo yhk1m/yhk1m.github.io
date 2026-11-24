@@ -57,6 +57,12 @@ html { scroll-behavior: smooth; }
 .m-globe__outer { fill: none; stroke: var(--fg); stroke-width: 1; }
 .m-globe__marker { fill: var(--accent); }
 .m-globe__ring { fill: none; stroke: var(--accent); stroke-width: 1; }
+/* 예전 회전 지구본(styles.css .gl 애니메이션)을 모노 색으로 */
+.m-globe--spin { transform: rotate(-23.5deg); }
+.m-globe .gl { stroke: var(--g3); }
+.m-globe .gl-outer { stroke: var(--fg); stroke-width: 1; }
+.m-globe .gl-marker { fill: var(--accent); }
+.m-globe .gl-pulse { stroke: var(--accent); stroke-width: 1; }
 
 @media (max-width: 1023px) {
   .m-hero-grid { grid-template-columns: 1fr; }

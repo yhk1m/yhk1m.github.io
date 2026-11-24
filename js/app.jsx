@@ -851,30 +851,75 @@ function PublicHeader({ dark, setDark, lang }) {
   );
 }
 
-// ===== Hero Globe (static line drawing) =====
+// ===== Hero Globe Animation =====
 function HeroGlobe() {
-  const R = 178, N = 8, rot = 0.35;
-  const toRad = d => d * Math.PI / 180;
-  // 서울(37N, 127E)이 앞면에 오도록 중심 경도를 127로 둔 정사도법
-  const lat = toRad(37);
-  const mx = 200, my = 200 - R * Math.sin(lat);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    let raf, angle = 127;
+    const R = 178, N = 8;
+    const toRad = d => d * Math.PI / 180;
+
+    const ortho = (lon, lat, cLon) => {
+      const l = toRad(lon), p = toRad(lat), l0 = toRad(cLon);
+      if (Math.cos(p) * Math.cos(l - l0) < 0) return null;
+      return [200 + R * Math.cos(p) * Math.sin(l - l0), 200 - R * Math.sin(p)];
+    };
+
+    const tick = () => {
+      const svg = ref.current;
+      if (!svg) { raf = requestAnimationFrame(tick); return; }
+      angle = (angle + 0.04) % 360;
+      const cLon = angle;
+      const a = toRad(angle);
+
+      // Longitude ellipses
+      for (let i = 0; i < N; i++) {
+        const el = svg.querySelector('#lon' + i);
+        if (!el) continue;
+        const phi = (i * Math.PI / (N / 2)) + a;
+        el.setAttribute('rx', Math.max(Math.abs(R * Math.cos(phi)), 0.5));
+        el.setAttribute('opacity', Math.abs(Math.cos(phi)) * 0.7 + 0.3);
+      }
+
+      // Seoul marker (37°N, 127°E)
+      const m = svg.querySelector('#gm'), mp = svg.querySelector('#gmp');
+      if (m && mp) {
+        const pos = ortho(127, 37, cLon);
+        if (pos) {
+          m.setAttribute('cx', pos[0]); m.setAttribute('cy', pos[1]);
+          mp.setAttribute('cx', pos[0]); mp.setAttribute('cy', pos[1]);
+          m.style.opacity = 1; mp.style.opacity = 1;
+        } else {
+          m.style.opacity = 0; mp.style.opacity = 0;
+        }
+      }
+      raf = requestAnimationFrame(tick);
+    };
+
+    const timer = setTimeout(() => { raf = requestAnimationFrame(tick); }, 2500);
+    return () => { cancelAnimationFrame(raf); clearTimeout(timer); };
+  }, []);
+
+  const R = 178, N = 8;
   return (
-    <svg className="m-globe" viewBox="0 0 400 400" aria-hidden="true">
-      <defs><clipPath id="gc"><circle cx="200" cy="200" r="177"/></clipPath></defs>
+    <svg ref={ref} className="m-globe m-globe--spin" viewBox="0 0 400 400" aria-hidden="true">
+      <defs><clipPath id="gc"><circle cx="200" cy="200" r="176"/></clipPath></defs>
+      <circle cx="200" cy="200" r="178" className="gl gl-outer"/>
       <g clipPath="url(#gc)">
-        {[-60, -30, 0, 30, 60].map(d => {
-          const y = 200 - R * Math.sin(toRad(d));
-          const hw = R * Math.cos(toRad(d));
-          return <line key={d} x1={200 - hw} y1={y} x2={200 + hw} y2={y} className={d === 0 ? 'm-globe__eq' : ''} />;
-        })}
-        {Array.from({ length: N }, (_, i) => {
-          const phi = i * Math.PI / N + rot;
-          return <ellipse key={i} cx="200" cy="200" rx={Math.max(Math.abs(R * Math.sin(phi)), 0.5)} ry={R} />;
+        <line x1="0" y1="200" x2="400" y2="200" className="gl gl-lat" style={{animationDelay:'0.8s'}}/>
+        <line x1="10" y1="140" x2="390" y2="140" className="gl gl-lat" style={{animationDelay:'1.0s'}}/>
+        <line x1="50" y1="80" x2="350" y2="80" className="gl gl-lat" style={{animationDelay:'1.2s'}}/>
+        <line x1="10" y1="260" x2="390" y2="260" className="gl gl-lat" style={{animationDelay:'1.1s'}}/>
+        <line x1="50" y1="320" x2="350" y2="320" className="gl gl-lat" style={{animationDelay:'1.3s'}}/>
+        {Array.from({length: N}, (_, i) => {
+          const phi = i * Math.PI / (N / 2);
+          return <ellipse key={i} id={'lon' + i} cx="200" cy="200" rx={Math.max(Math.abs(R * Math.cos(phi)), 0.5)} ry={R}
+            className="gl gl-lon" style={{animationDelay: 0.4 + i * 0.1 + 's'}} />;
         })}
       </g>
-      <circle cx="200" cy="200" r={R} className="m-globe__outer" />
-      <circle cx={mx} cy={my} r="5" className="m-globe__marker" />
-      <circle cx={mx} cy={my} r="13" className="m-globe__ring" />
+      <circle id="gm" cx="200" cy="93" r="5" className="gl-marker"/>
+      <circle id="gmp" cx="200" cy="93" r="12" className="gl-pulse"/>
     </svg>
   );
 }
