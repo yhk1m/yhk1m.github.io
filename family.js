@@ -1,0 +1,215 @@
+// © 2026 김용현
+/*
+ * bgnl.kr 패밀리 사이트 드롭다운
+ * 쓰는 법: 꼬리말에 <div data-bgnl-family></div> 를 두고
+ *         <script src="https://bgnl.kr/family.js" defer></script> 를 넣는다.
+ * 사이트 목록은 아래 SITES 만 고치면 모든 사이트에 함께 반영된다.
+ */
+(function () {
+  'use strict';
+
+  var SITES = [
+    { name: 'GeoTester', url: 'https://geotester.bgnl.kr' },
+    { name: 'GeoStatAtlas', url: 'https://geostatatlas.bgnl.kr' },
+    { name: 'GeoGrapher', url: 'https://geographer.bgnl.kr' },
+    { name: 'e-GIS', url: 'https://e-gis.kr' },
+    { name: '통사랑', url: 'https://tongsarang.kr' },
+    { name: '지형 형성 실험실', url: 'https://topolab.bgnl.kr' },
+    { name: 'Projection 3D', url: 'https://proj3d.bgnl.kr' },
+    { name: '대기 대순환', url: 'https://gcs.bgnl.kr' },
+    { name: 'GeoSource', url: 'https://geosource.bgnl.kr' },
+    { name: 'LocFinder', url: 'https://locfinder.bgnl.kr' },
+    { name: 'GeoShelf', url: 'https://geoshelf.kr' },
+    { name: 'SpaceArchive', url: 'https://yhk1m.github.io/space-archive/' },
+    { name: 'bgnl.kr', url: 'https://bgnl.kr' }
+  ];
+
+  var STYLE_ID = 'bgnl-family-style';
+  var CSS = [
+    '.bgnl-fam{position:relative;display:inline-block;font:inherit;color:inherit;text-align:left;line-height:1.4}',
+    '.bgnl-fam__btn{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;font:inherit;font-size:14px;color:inherit;',
+    'background:transparent;border:1px solid rgba(127,127,127,.4);border-radius:8px;cursor:pointer}',
+    '.bgnl-fam__btn:hover{border-color:rgba(127,127,127,.8)}',
+    '.bgnl-fam__btn:focus-visible{outline:2px solid currentColor;outline-offset:2px}',
+    '.bgnl-fam__btn svg{width:14px;height:14px;flex:none;transition:transform .15s}',
+    '.bgnl-fam[data-open] .bgnl-fam__btn svg{transform:rotate(180deg)}',
+    '.bgnl-fam__list{position:absolute;left:0;bottom:calc(100% + 6px);z-index:2147483000;min-width:240px;max-width:calc(100vw - 32px);',
+    'max-height:min(420px,70vh);overflow:auto;margin:0;padding:6px;list-style:none;border:1px solid rgba(127,127,127,.35);',
+    'border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.18)}',
+    '.bgnl-fam[data-down] .bgnl-fam__list{bottom:auto;top:calc(100% + 6px)}',
+    '.bgnl-fam[data-right] .bgnl-fam__list{left:auto;right:0}',
+    '.bgnl-fam__list[hidden]{display:none}',
+    '.bgnl-fam__item{margin:0;padding:0}',
+    '.bgnl-fam__link{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:44px;padding:0 12px;',
+    'border-radius:6px;color:inherit;text-decoration:none;font-size:14px}',
+    '.bgnl-fam__link:hover,.bgnl-fam__link:focus-visible{background:rgba(127,127,127,.14);outline:none}',
+    '.bgnl-fam__host{font-size:12px;opacity:.6;white-space:nowrap}',
+    '.bgnl-fam__link[aria-current]{font-weight:700}',
+    '@media print{.bgnl-fam{display:none}}'
+  ].join('');
+
+  function addStyle() {
+    if (document.getElementById(STYLE_ID)) return;
+    var s = document.createElement('style');
+    s.id = STYLE_ID;
+    s.textContent = CSS;
+    (document.head || document.documentElement).appendChild(s);
+  }
+
+  function hostOf(url) {
+    try { return new URL(url).host.replace(/^www\./, ''); } catch (e) { return url; }
+  }
+
+  function isCurrent(url) {
+    try {
+      var u = new URL(url);
+      var here = location.host.replace(/^www\./, '');
+      if (u.host.replace(/^www\./, '') !== here) return false;
+      var p = u.pathname.replace(/\/+$/, '');
+      return p === '' || location.pathname.indexOf(p) === 0;
+    } catch (e) { return false; }
+  }
+
+  /* 꼬리말 바탕색을 찾아 펼친 목록에 쓴다 (사이트마다 색이 달라서) */
+  function solidBackground(el) {
+    var node = el;
+    while (node && node.nodeType === 1) {
+      var bg = getComputedStyle(node).backgroundColor;
+      var m = bg && bg.match(/rgba?\(([^)]+)\)/);
+      if (m) {
+        var parts = m[1].split(/[\s,\/]+/).filter(Boolean);
+        var alpha = parts.length > 3 ? parseFloat(parts[3]) : 1;
+        if (alpha > 0.95) return bg;
+      }
+      node = node.parentElement;
+    }
+    var scheme = getComputedStyle(document.documentElement).colorScheme || '';
+    return scheme.indexOf('dark') === 0 ? '#1e1e1e' : '#ffffff';
+  }
+
+  var CHEVRON = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" ' +
+    'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10l4-4 4 4"/></svg>';
+
+  var uid = 0;
+
+  function build(mount) {
+    if (mount.getAttribute('data-bgnl-family-ready')) return;
+    mount.setAttribute('data-bgnl-family-ready', '1');
+    addStyle();
+
+    var label = mount.getAttribute('data-label') || '패밀리 사이트';
+    var id = 'bgnl-fam-list-' + (++uid);
+
+    var root = document.createElement('div');
+    root.className = 'bgnl-fam';
+
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'bgnl-fam__btn';
+    btn.setAttribute('aria-expanded', 'false');
+    btn.setAttribute('aria-controls', id);
+    btn.innerHTML = '<span></span>' + CHEVRON;
+    btn.firstChild.textContent = label;
+
+    var list = document.createElement('ul');
+    list.className = 'bgnl-fam__list';
+    list.id = id;
+    list.hidden = true;
+
+    SITES.forEach(function (site) {
+      var li = document.createElement('li');
+      li.className = 'bgnl-fam__item';
+      var a = document.createElement('a');
+      a.className = 'bgnl-fam__link';
+      a.href = site.url;
+      var name = document.createElement('span');
+      name.textContent = site.name;
+      var host = document.createElement('span');
+      host.className = 'bgnl-fam__host';
+      if (isCurrent(site.url)) {
+        a.setAttribute('aria-current', 'page');
+        host.textContent = '지금 보는 곳';
+      } else {
+        a.target = '_blank';
+        a.rel = 'noopener';
+        host.textContent = hostOf(site.url);
+      }
+      a.appendChild(name);
+      a.appendChild(host);
+      li.appendChild(a);
+      list.appendChild(li);
+    });
+
+    function place() {
+      var r = btn.getBoundingClientRect();
+      if (r.top < Math.min(440, window.innerHeight * 0.72) && window.innerHeight - r.bottom > r.top) {
+        root.setAttribute('data-down', '');
+      } else {
+        root.removeAttribute('data-down');
+      }
+      if (r.left + 260 > window.innerWidth) root.setAttribute('data-right', '');
+      else root.removeAttribute('data-right');
+    }
+
+    function open() {
+      list.style.background = solidBackground(mount);
+      place();
+      list.hidden = false;
+      root.setAttribute('data-open', '');
+      btn.setAttribute('aria-expanded', 'true');
+    }
+
+    function close(focusBtn) {
+      if (list.hidden) return;
+      list.hidden = true;
+      root.removeAttribute('data-open');
+      btn.setAttribute('aria-expanded', 'false');
+      if (focusBtn) btn.focus();
+    }
+
+    btn.addEventListener('click', function () {
+      if (list.hidden) open(); else close(false);
+    });
+    document.addEventListener('click', function (e) {
+      if (!root.contains(e.target)) close(false);
+    });
+    root.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') { close(true); return; }
+      if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+      var links = Array.prototype.slice.call(list.querySelectorAll('a'));
+      if (list.hidden) { open(); links[0].focus(); e.preventDefault(); return; }
+      var i = links.indexOf(document.activeElement);
+      i = e.key === 'ArrowDown' ? Math.min(links.length - 1, i + 1) : Math.max(0, i - 1);
+      links[i].focus();
+      e.preventDefault();
+    });
+
+    root.appendChild(btn);
+    root.appendChild(list);
+    mount.appendChild(root);
+  }
+
+  function scan() {
+    var mounts = document.querySelectorAll('[data-bgnl-family]');
+    for (var i = 0; i < mounts.length; i++) build(mounts[i]);
+  }
+
+  function start() {
+    scan();
+    /* React 같은 앱은 꼬리말을 나중에 그리므로 계속 지켜본다 */
+    if (window.MutationObserver) {
+      var queued = false;
+      new MutationObserver(function () {
+        if (queued) return;
+        queued = true;
+        setTimeout(function () { queued = false; scan(); }, 300);
+      })
+        .observe(document.documentElement, { childList: true, subtree: true });
+    }
+  }
+
+  window.bgnlFamily = { sites: SITES, mount: build };
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+  else start();
+})();
