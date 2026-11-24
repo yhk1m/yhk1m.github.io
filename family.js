@@ -97,7 +97,7 @@
     mount.setAttribute('data-bgnl-family-ready', '1');
     addStyle();
 
-    var label = mount.getAttribute('data-label') || '패밀리 사이트';
+    var label = mount.getAttribute('data-label') || 'Family Sites';
     var id = 'bgnl-fam-list-' + (++uid);
 
     var root = document.createElement('div');

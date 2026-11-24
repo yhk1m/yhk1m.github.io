@@ -2538,7 +2538,7 @@ function Footer({ lang = 'ko' }) {
   return (
     <footer className="footer" style={{textAlign:'center'}}>
       <div className="container">
-        <div data-bgnl-family="" data-label={lang === 'en' ? 'Family sites' : '패밀리 사이트'} style={{marginBottom:'16px'}}></div>
+        <div data-bgnl-family="" style={{marginBottom:'16px'}}></div>
         <p className="footer-copy">&copy; 2026 Yonghyun Kim. All rights reserved.</p>
       </div>
     </footer>
