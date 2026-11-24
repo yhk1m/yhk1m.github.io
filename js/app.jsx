@@ -2538,8 +2538,10 @@ function Footer({ lang = 'ko' }) {
   return (
     <footer className="footer" style={{textAlign:'center'}}>
       <div className="container">
-        <div data-bgnl-family="" style={{marginBottom:'16px'}}></div>
-        <p className="footer-copy">&copy; 2026 Yonghyun Kim. All rights reserved.</p>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:'12px',flexWrap:'nowrap'}}>
+          <p className="footer-copy" style={{margin:0}}>&copy; 2026 Yonghyun Kim. All rights reserved.</p>
+          <div data-bgnl-family=""></div>
+        </div>
       </div>
     </footer>
   );
