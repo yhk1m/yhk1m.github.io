@@ -142,7 +142,7 @@
 
     function place() {
       var r = btn.getBoundingClientRect();
-      if (r.top < Math.min(440, window.innerHeight * 0.72) && window.innerHeight - r.bottom > r.top) {
+      if (r.top < Math.min(520, window.innerHeight * 0.72) && window.innerHeight - r.bottom > r.top) {
         root.setAttribute('data-down', '');
       } else {
         root.removeAttribute('data-down');
