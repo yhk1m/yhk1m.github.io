@@ -34,7 +34,7 @@
     '.bgnl-fam__btn:focus-visible{outline:2px solid currentColor;outline-offset:2px}',
     '.bgnl-fam__btn svg{width:11px;height:11px;flex:none;transition:transform .15s}',
     '.bgnl-fam[data-open] .bgnl-fam__btn svg{transform:rotate(180deg)}',
-    '.bgnl-fam__list{position:absolute;left:0;bottom:calc(100% + 6px);z-index:2147483000;min-width:240px;max-width:calc(100vw - 32px);',
+    '.bgnl-fam__list{box-sizing:border-box;position:absolute;left:0;bottom:calc(100% + 6px);z-index:2147483000;min-width:240px;max-width:calc(100vw - 32px);',
     'max-height:min(500px,70vh);overflow:auto;margin:0;padding:6px;list-style:none;border:1px solid rgba(127,127,127,.35);',
     'border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.18)}',
     '.bgnl-fam[data-down] .bgnl-fam__list{bottom:auto;top:calc(100% + 6px)}',
@@ -183,11 +183,20 @@
 
     function place() {
       var r = btn.getBoundingClientRect();
-      if (r.top < Math.min(520, window.innerHeight * 0.72) && window.innerHeight - r.bottom > r.top) {
-        root.setAttribute('data-down', '');
-      } else {
-        root.removeAttribute('data-down');
-      }
+      var gap = 6, edge = 8;
+      var above = r.top - gap - edge;
+      var below = window.innerHeight - r.bottom - gap - edge;
+      /* 사이트가 정한 최대 높이(휴대폰 아래 시트 등)가 있으면 그것을 넘지 않는다 */
+      list.style.maxHeight = '';
+      list.hidden = false;
+      var cssMax = parseFloat(getComputedStyle(list).maxHeight);
+      list.hidden = true;
+      var want = Math.min(isNaN(cssMax) ? 500 : cssMax, 500, window.innerHeight * 0.7);
+      /* 위에 다 들어가면 위로, 아니면 더 넓은 쪽으로 펼치고 그 높이에 맞춰 줄인다 */
+      var down = above < want && below > above;
+      if (down) root.setAttribute('data-down', '');
+      else root.removeAttribute('data-down');
+      list.style.maxHeight = Math.max(120, Math.min(want, down ? below : above)) + 'px';
       if (r.left + 260 > window.innerWidth) root.setAttribute('data-right', '');
       else root.removeAttribute('data-right');
     }
