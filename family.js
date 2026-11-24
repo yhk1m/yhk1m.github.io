@@ -26,7 +26,8 @@
 
   var STYLE_ID = 'bgnl-family-style';
   var CSS = [
-    '.bgnl-fam{position:relative;display:inline-block;font:inherit;color:inherit;text-align:left;line-height:1.4;overflow-wrap:normal;word-break:keep-all;letter-spacing:normal;text-transform:none}',
+    '[data-bgnl-family]{display:inline-block;vertical-align:middle;white-space:nowrap}',
+    '.bgnl-fam{position:relative;display:inline-block;vertical-align:middle;white-space:nowrap;font:inherit;color:inherit;text-align:left;line-height:1.4;overflow-wrap:normal;word-break:keep-all;letter-spacing:normal;text-transform:none}',
     '.bgnl-fam__btn{display:inline-flex;align-items:center;gap:4px;min-height:28px;padding:0 10px;font:inherit;font-size:12px;line-height:1;color:inherit;',
     'background:transparent;border:1px solid rgba(127,127,127,.4);border-radius:6px;cursor:pointer;opacity:.85}',
     '.bgnl-fam__btn:hover{border-color:rgba(127,127,127,.8);opacity:1}',
@@ -44,7 +45,8 @@
     'border-radius:6px;color:inherit;text-decoration:none;font-size:13px}',
     '.bgnl-fam__link:hover,.bgnl-fam__link:focus-visible{background:rgba(127,127,127,.14);outline:none}',
     '.bgnl-fam__host{font-size:12px;opacity:.6;white-space:nowrap}',
-    '.bgnl-fam__link[aria-current]{font-weight:700}',
+    '.bgnl-fam__link[aria-current]{font-weight:700;color:var(--bgnl-fam-cur);background:var(--bgnl-fam-cur-bg)}',
+    '.bgnl-fam__link[aria-current] .bgnl-fam__host{opacity:.9}',
     '@media print{.bgnl-fam{display:none}}'
   ].join('');
 
@@ -85,6 +87,46 @@
     }
     var scheme = getComputedStyle(document.documentElement).colorScheme || '';
     return scheme.indexOf('dark') === 0 ? '#1e1e1e' : '#ffffff';
+  }
+
+  function rgbOf(color) {
+    var probe = document.createElement('span');
+    probe.style.color = color;
+    probe.style.display = 'none';
+    document.body.appendChild(probe);
+    var c = getComputedStyle(probe).color;
+    probe.remove();
+    var m = c.match(/[\d.]+/g);
+    return m ? [+m[0], +m[1], +m[2]] : null;
+  }
+
+  function luminance(rgb) {
+    var v = rgb.map(function (x) {
+      x /= 255;
+      return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2];
+  }
+
+  function contrast(a, b) {
+    var la = luminance(a), lb = luminance(b);
+    return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+  }
+
+  /* 지금 보는 사이트 줄의 색: 사이트 강조색을 쓰고, 없거나 잘 안 보이면 파랑 */
+  function currentColor(bg) {
+    var bgRgb = rgbOf(bg) || [255, 255, 255];
+    var dark = luminance(bgRgb) < 0.4;
+    var rootStyle = getComputedStyle(document.documentElement);
+    var names = ['--accent', '--color-accent', '--accent-color', '--primary', '--color-primary', '--brand', '--brand-color'];
+    for (var i = 0; i < names.length; i++) {
+      var v = rootStyle.getPropertyValue(names[i]).trim();
+      if (!v) continue;
+      var rgb = rgbOf(v);
+      if (rgb && contrast(rgb, bgRgb) >= 4.5) return { fg: 'rgb(' + rgb.join(',') + ')', rgb: rgb };
+    }
+    var fallback = dark ? [122, 176, 255] : [21, 101, 222];
+    return { fg: 'rgb(' + fallback.join(',') + ')', rgb: fallback };
   }
 
   var CHEVRON = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" ' +
@@ -128,12 +170,11 @@
       host.className = 'bgnl-fam__host';
       if (isCurrent(site.url)) {
         a.setAttribute('aria-current', 'page');
-        host.textContent = '지금 보는 곳';
       } else {
         a.target = '_blank';
         a.rel = 'noopener';
-        host.textContent = hostOf(site.url);
       }
+      host.textContent = hostOf(site.url);
       a.appendChild(name);
       a.appendChild(host);
       li.appendChild(a);
@@ -152,7 +193,11 @@
     }
 
     function open() {
-      list.style.background = solidBackground(mount);
+      var bg = solidBackground(mount);
+      list.style.background = bg;
+      var cur = currentColor(bg);
+      list.style.setProperty('--bgnl-fam-cur', cur.fg);
+      list.style.setProperty('--bgnl-fam-cur-bg', 'rgba(' + cur.rgb.join(',') + ',.12)');
       place();
       list.hidden = false;
       root.setAttribute('data-open', '');
