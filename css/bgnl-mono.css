@@ -1,0 +1,175 @@
+/* © 2026 김용현 */
+/* bgnl.kr 모노 디자인 덧붙임
+   mono.css 다음에 읽는다. styles.css(비공개 화면용)와 겹치는 규칙을 정리하고,
+   mono.css에 없는 이 사이트 부품을 같은 규칙으로 만든다. */
+
+/* ---------- 1. 예전 styles.css 토큰을 모노 토큰에 잇기 (비공개 화면도 같은 흑백) ---------- */
+:root:root {
+  --text: var(--fg);
+  --text-secondary: var(--g6);
+  --text-muted: var(--g5);
+  --border: var(--g3);
+  --border-light: var(--g2);
+  --bg-secondary: var(--g1);
+  --bg-card: var(--bg);
+  --bg-nav: var(--bg);
+  --accent-hover: var(--g6);
+  --accent-light: var(--hover);
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+}
+body { transition: none; }
+html { scroll-behavior: smooth; }
+
+/* styles.css 의 링크 밑줄 지우기 */
+.m-header a, .m-drawer a, .m-home a:not(.m-btn), .m-footer a { border-bottom: 0; }
+.m-home a.m-btn, .m-detail a.m-btn { border-bottom-width: 1px; border-bottom-style: solid; }
+.m-home a.m-btn--line:hover, .m-detail a.m-btn--line:hover { border-color: var(--g3); }
+.m-home a.m-btn:not(.m-btn--line):hover, .m-detail a.m-btn:not(.m-btn--line):hover { border-color: var(--fg); }
+
+/* ---------- 2. 머리 ---------- */
+.m-brand__logo { width: 28px; height: 28px; }
+:root[data-theme="dark"] .m-brand__logo { filter: invert(1); }
+.m-lang {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 44px; height: 44px; padding: 0 8px;
+  font-size: var(--fs-14); font-weight: 600; letter-spacing: 0; color: var(--g5);
+}
+.m-lang:hover { color: var(--fg); }
+.m-drawer__foot .m-lang { padding: 0; justify-content: flex-start; }
+
+/* ---------- 3. 첫 화면 ---------- */
+/* styles.css 의 예전 .hero(회색 면, 테두리, 줄무늬)를 끈다 */
+.m-home .hero { display: block; background: none; border: 0; margin: 0; overflow: visible; position: static; }
+.m-home .hero::before { content: none; }
+.m-hero-grid { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 80px; align-items: center; }
+.m-hero-sub { margin-top: 12px; font-size: var(--fs-24); font-weight: 300; line-height: 1.4; color: var(--g5); }
+/* 줄 첫머리에 오는 구분선은 바깥 상자가 잘라 낸다 */
+.m-inline-wrap { overflow: hidden; margin-top: 32px; }
+.m-inline-list { display: flex; flex-wrap: wrap; margin-left: -25px; font-size: var(--fs-14); letter-spacing: 0; color: var(--g6); }
+.m-inline-list li { display: inline-flex; align-items: center; line-height: 1.6; }
+.m-inline-list li::before { content: ""; width: 1px; height: 12px; background: var(--g3); margin: 0 12px; }
+
+.m-globe { width: 100%; height: auto; overflow: visible; }
+.m-globe line, .m-globe ellipse { fill: none; stroke: var(--g3); stroke-width: 1; }
+.m-globe .m-globe__eq { stroke: var(--g4); }
+.m-globe__outer { fill: none; stroke: var(--fg); stroke-width: 1; }
+.m-globe__marker { fill: var(--accent); }
+.m-globe__ring { fill: none; stroke: var(--accent); stroke-width: 1; }
+
+@media (max-width: 1023px) {
+  .m-hero-grid { grid-template-columns: 1fr; }
+  .m-globe { display: none; }
+}
+@media (max-width: 767px) {
+  .m-hero-sub { font-size: var(--fs-20); }
+  .m-inline-wrap { margin-top: 24px; }
+  .m-inline-list { row-gap: 4px; }
+}
+
+/* ---------- 4. 소개 ---------- */
+.m-bio-text p { font-size: var(--fs-18); line-height: 1.8; color: var(--g6); }
+.m-bio-text p + p { margin-top: 20px; }
+.m-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-content: start; }
+.m-stat { border-top: 1px solid var(--fg); padding-top: 20px; }
+.m-stat .m-card__desc { margin-top: 12px; }
+.m-num--text { font-size: 40px; line-height: 1.2; letter-spacing: -1px; color: var(--fg); }
+.m-timeline { margin-top: 80px; }
+.m-timeline .m-label { margin-bottom: 20px; }
+@media (max-width: 767px) {
+  .m-bio-text p { font-size: var(--fs-16); }
+  .m-stats { gap: 32px 16px; }
+  .m-num--text { font-size: 28px; }
+  .m-timeline { margin-top: 60px; }
+}
+
+/* ---------- 5. 목록 덧붙임 ---------- */
+.m-list__date { flex: 0 0 120px; font-size: var(--fs-14); letter-spacing: 0; color: var(--g5); font-variant-numeric: tabular-nums; }
+.m-list__btn { text-align: left; color: var(--fg); }
+.m-list__btn:hover, .m-contact a.m-list__title:hover { text-decoration: underline; text-underline-offset: 4px; }
+.m-clamp-2, .m-clamp-3 { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
+.m-clamp-2 { -webkit-line-clamp: 2; }
+.m-clamp-3 { -webkit-line-clamp: 3; }
+.m-contact .m-list__meta { color: var(--g5); }
+@media (max-width: 767px) {
+  .m-list > li > .m-list__date { flex-basis: 100%; order: 1; }
+  .m-contact .m-list__meta { display: none; }
+}
+
+/* ---------- 6. 만든 도구 카드 ---------- */
+.m-lab { row-gap: 60px; }
+.m-card--link { display: flex; flex-direction: column; color: var(--fg); }
+.m-card__top { display: flex; align-items: center; justify-content: space-between; }
+.m-card__arrow { color: var(--g4); }
+.m-card--link:hover .m-card__arrow { color: var(--fg); }
+.m-card--link:hover .m-card__title { text-decoration: underline; text-underline-offset: 4px; }
+.m-card__tech { margin-top: 12px; }
+.m-appicon { width: 32px; height: 32px; object-fit: contain; }
+.m-appicon--text {
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--g3); font-size: var(--fs-14); font-weight: 600; letter-spacing: 0; color: var(--g6);
+}
+
+/* ---------- 7. 유튜브 ---------- */
+.m-yt { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) auto; gap: 40px; align-items: center; padding: 32px 0; border-top: 1px solid var(--fg); border-bottom: 1px solid var(--g2); }
+.m-yt__name { font-weight: 400; }
+.m-yt__desc { color: var(--g6); }
+.m-videos { margin-top: 60px; }
+.m-video { display: flex; flex-direction: column; gap: 4px; color: var(--fg); }
+.m-video__thumb { display: block; aspect-ratio: 16 / 9; background: var(--g1); overflow: hidden; margin-bottom: 12px; }
+.m-video__thumb img { width: 100%; height: 100%; object-fit: cover; }
+.m-video .m-card__title { margin-top: 0; }
+.m-video:hover .m-card__title { text-decoration: underline; text-underline-offset: 4px; }
+@media (max-width: 1023px) { .m-yt { grid-template-columns: 1fr; gap: 20px; justify-items: start; } }
+
+/* ---------- 8. 글 보기 ---------- */
+.m-detail__head { margin-top: 40px; padding-bottom: 40px; border-bottom: 1px solid var(--fg); }
+.m-detail__head .m-title { font-weight: 300; }
+.m-detail__tech { margin-top: 24px; }
+.m-detail__body { padding-top: 40px; }
+.m-prose { font-size: var(--fs-16); line-height: 1.8; color: var(--fg); }
+.m-prose > * + * { margin-top: 20px; }
+.m-prose h1, .m-prose h2 { font-size: var(--fs-24); font-weight: 400; line-height: 1.4; margin-top: 60px; }
+.m-prose h3 { font-size: var(--fs-20); font-weight: 600; line-height: 1.4; margin-top: 40px; }
+.m-prose h4 { font-size: var(--fs-18); font-weight: 600; margin-top: 32px; }
+.m-prose p, .m-prose li { color: var(--g6); }
+.m-prose strong { color: var(--fg); font-weight: 600; }
+.m-prose a { color: var(--fg); border-bottom: 0; text-decoration: underline; text-underline-offset: 4px; word-break: break-all; }
+.m-prose ul, .m-prose ol { padding-left: 24px; }
+.m-prose ul { list-style: square; }
+.m-prose ol { list-style: decimal; }
+.m-prose li + li { margin-top: 8px; }
+.m-prose blockquote { margin: 20px 0 0; padding: 24px 32px; background: var(--g1); color: var(--g6); }
+.m-prose img { max-width: 100%; height: auto; }
+.m-prose hr { border: 0; border-top: 1px solid var(--g2); margin: 40px 0; }
+.m-prose code { background: var(--g1); padding: 2px 6px; }
+.m-prose pre { background: var(--g1); padding: 20px; overflow-x: auto; }
+.m-prose pre code { background: none; padding: 0; }
+.m-prose table { width: 100%; border-collapse: collapse; border-top: 1px solid var(--fg); font-size: var(--fs-14); letter-spacing: 0; }
+.m-prose th { background: var(--g1); font-weight: 600; padding: 12px 16px; border-bottom: 1px solid var(--g2); text-align: left; }
+.m-prose td { padding: 12px 16px; border-bottom: 1px solid var(--g2); color: var(--g6); }
+
+/* 글이 짧아도 꼬리말이 화면 가운데로 올라오지 않게 */
+.m-detail { min-height: calc(100vh - 104px); }
+
+/* ---------- 9. 꼬리말 ---------- */
+.m-footer__copyrow { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.m-footer .bgnl-fam__btn { border-radius: 2px; border-color: #434343; color: #fff; opacity: 1; }
+.m-footer .bgnl-fam__btn:hover { border-color: #d4d4d4; }
+.m-footer .bgnl-fam__list { border-radius: 0; box-shadow: none; border-color: #434343; color: #fff; }
+.m-footer .bgnl-fam__link { border-radius: 0; }
+.m-footer .bgnl-fam__link:hover, .m-footer .bgnl-fam__link:focus-visible { background: #1a1a1a; }
+
+/* ---------- 10. 맨 위로 ---------- */
+.top-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--g3); border-radius: 2px; background: var(--bg); color: var(--fg); box-shadow: none;
+}
+.top-btn:hover { background: var(--hover); color: var(--fg); border-color: var(--fg); }
+@media (max-width: 767px) { .top-btn { right: 16px; bottom: 16px; } }
+
+@media print {
+  .top-btn, .m-lang, .m-globe { display: none !important; }
+  .m-footer .bgnl-fam { display: none; }
+}

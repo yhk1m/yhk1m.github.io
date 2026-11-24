@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html lang="ko" data-theme="light">
+<html lang="ko" data-tone="mono" data-theme="light">
 <head>
     <meta charset="UTF-8">
+    <script>try{var d=localStorage.getItem("hub_dark");d=d===null?matchMedia("(prefers-color-scheme: dark)").matches:JSON.parse(d);document.documentElement.setAttribute("data-theme",d?"dark":"light")}catch(e){}</script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>비그늘</title>
     <meta name="description" content="김용현의 개인 포트폴리오. 프로그래밍, GIS, 콘텐츠 크리에이터. Personal portfolio of Yonghyun Kim.">
@@ -25,6 +26,8 @@
     </script>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/mono.css">
+    <link rel="stylesheet" href="css/bgnl-mono.css">
 </head>
 <body>
     <div id="root"></div>

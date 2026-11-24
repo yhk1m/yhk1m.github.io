@@ -493,12 +493,24 @@ const TEXTS = {
     boardBack: '← 목록으로',
     boardTech: '기술 스택',
     boardLoading: '불러오는 중...',
+    back: '목록으로',
+    timeline: '걸어온 길',
+    countUnit: '개',
+    heroLab: '만든 도구 보기',
+    heroContact: '연락하기',
+    ytVisit: '채널 방문하기',
   },
   en: {
     filterAll: 'All',
     boardBack: '← Back to list',
     boardTech: 'Tech Stack',
     boardLoading: 'Loading...',
+    back: 'Back',
+    timeline: 'Timeline',
+    countUnit: '',
+    heroLab: 'See the tools',
+    heroContact: 'Contact',
+    ytVisit: 'Visit channel',
   },
 };
 
@@ -747,84 +759,193 @@ function Board({ items, filterAll, texts }) {
   );
 }
 
-// ===== Hero Globe Animation =====
-function HeroGlobe() {
-  const ref = useRef(null);
+// ===== Mono helpers =====
+// 보이는 글의 가운데 점은 쉼표로 바꿔 보여 준다 (원본 자료는 그대로)
+const noDot = (s) => (typeof s === 'string' ? s.replace(/\s*[·•]\s*/g, ', ').replace(/\s+[—–]\s+/g, ', ') : s);
+const rangeText = (s) => (typeof s === 'string' ? s.replace(/\s+[-–—]\s+/g, ' ~ ') : s);
+
+const PUBLIC_SECTIONS = [
+  { id: 'bio', label: 'Bio' },
+  { id: 'geo', label: 'Geo' },
+  { id: 'notes', label: 'Notes' },
+  { id: 'lab', label: 'Lab' },
+  { id: 'youtube', label: 'YouTube' },
+  { id: 'contact', label: 'Contact' },
+];
+
+const scrollToSection = (id) => (e) => {
+  if (e) e.preventDefault();
+  const el = document.getElementById('s-' + id);
+  if (el) el.scrollIntoView({ behavior: 'smooth' });
+};
+
+function IconMoon() { return <svg className="m-icon i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>; }
+function IconSun() { return <svg className="m-icon i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>; }
+function IconArrowUR({ sm = true }) { return <svg className={'m-icon' + (sm ? ' m-icon--sm' : '')} viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17L17 7M8 7h9v9"/></svg>; }
+function IconArrowR() { return <svg className="m-icon m-icon--sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16M14 6l6 6-6 6"/></svg>; }
+function IconArrowL() { return <svg className="m-icon m-icon--sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12H4M10 6l-6 6 6 6"/></svg>; }
+
+// ===== Public Header (mono) =====
+function PublicHeader({ dark, setDark, lang }) {
+  const [open, setOpen] = useState(false);
+  const base = window.HUB_LANG === 'en' ? '../' : '';
 
   useEffect(() => {
-    let raf, angle = 127;
-    const R = 178, N = 8;
-    const toRad = d => d * Math.PI / 180;
+    document.body.classList.toggle('m-drawer-open', open);
+    if (!open) return;
+    const onKey = (e) => { if (e.key === 'Escape') setOpen(false); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [open]);
 
-    const ortho = (lon, lat, cLon) => {
-      const l = toRad(lon), p = toRad(lat), l0 = toRad(cLon);
-      if (Math.cos(p) * Math.cos(l - l0) < 0) return null;
-      return [200 + R * Math.cos(p) * Math.sin(l - l0), 200 - R * Math.sin(p)];
-    };
+  const go = (id) => (e) => { setOpen(false); scrollToSection(id)(e); };
 
-    const tick = () => {
-      const svg = ref.current;
-      if (!svg) { raf = requestAnimationFrame(tick); return; }
-      angle = (angle + 0.04) % 360;
-      const cLon = angle;
-      const a = toRad(angle);
-
-      // Longitude ellipses
-      for (let i = 0; i < N; i++) {
-        const el = svg.querySelector('#lon' + i);
-        if (!el) continue;
-        const phi = (i * Math.PI / (N / 2)) + a;
-        el.setAttribute('rx', Math.max(Math.abs(R * Math.cos(phi)), 0.5));
-        el.setAttribute('opacity', Math.abs(Math.cos(phi)) * 0.7 + 0.3);
-      }
-
-      // Seoul marker (37°N, 127°E)
-      const m = svg.querySelector('#gm'), mp = svg.querySelector('#gmp');
-      if (m && mp) {
-        const pos = ortho(127, 37, cLon);
-        if (pos) {
-          m.setAttribute('cx', pos[0]); m.setAttribute('cy', pos[1]);
-          mp.setAttribute('cx', pos[0]); mp.setAttribute('cy', pos[1]);
-          m.style.opacity = 1; mp.style.opacity = 1;
-        } else {
-          m.style.opacity = 0; mp.style.opacity = 0;
-        }
-      }
-      raf = requestAnimationFrame(tick);
-    };
-
-    const timer = setTimeout(() => { raf = requestAnimationFrame(tick); }, 2500);
-    return () => { cancelAnimationFrame(raf); clearTimeout(timer); };
-  }, []);
-
-  const R = 178, N = 8;
   return (
-    <svg ref={ref} className="hero-globe" viewBox="0 0 400 400" aria-hidden="true">
-      <defs><clipPath id="gc"><circle cx="200" cy="200" r="176"/></clipPath></defs>
-      <circle cx="200" cy="200" r="178" className="gl gl-outer"/>
+    <>
+      <header className="m-header">
+        <div className="wrap m-header__row">
+          <a className="m-brand" href={lang === 'ko' ? './' : './'} onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+            <img src={base + 'favicon.svg'} alt="" className="m-brand__logo" />
+            <span className="m-brand__name">BGNL.kr</span>
+            <span className="m-brand__div" aria-hidden="true"></span>
+            <span className="m-brand__sub">{lang === 'ko' ? '김용현' : 'Yonghyun Kim'}</span>
+          </a>
+          <nav className="m-nav" aria-label={lang === 'ko' ? '주 메뉴' : 'Main menu'}>
+            {PUBLIC_SECTIONS.map(s => <a key={s.id} href={'#s-' + s.id} onClick={go(s.id)}>{s.label}</a>)}
+          </nav>
+          <div className="m-header__tools">
+            <a className="m-lang" href={lang === 'ko' ? 'en/' : '../'} lang={lang === 'ko' ? 'en' : 'ko'}>{lang === 'ko' ? 'EN' : 'KR'}</a>
+            <button type="button" className="m-iconbtn m-theme-toggle" aria-label={lang === 'ko' ? '밝게 어둡게 바꾸기' : 'Toggle dark mode'} onClick={() => setDark(!dark)}>
+              <IconMoon /><IconSun />
+            </button>
+            <button type="button" className="m-iconbtn m-menu-btn" aria-label={lang === 'ko' ? '전체 메뉴 열기' : 'Open menu'} aria-controls="drawer" aria-expanded={open} onClick={() => setOpen(true)}>
+              <svg className="m-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+            </button>
+          </div>
+        </div>
+        <nav className="m-subnav" aria-label={lang === 'ko' ? '주 메뉴' : 'Main menu'}>
+          <div className="wrap m-subnav__row">
+            {PUBLIC_SECTIONS.map(s => <a key={s.id} href={'#s-' + s.id} onClick={go(s.id)}>{s.label}</a>)}
+          </div>
+        </nav>
+      </header>
+
+      <div className={'m-scrim' + (open ? ' is-open' : '')} onClick={() => setOpen(false)}></div>
+      <aside className={'m-drawer' + (open ? ' is-open' : '')} id="drawer" aria-label={lang === 'ko' ? '전체 메뉴' : 'Menu'} aria-hidden={!open}>
+        <div className="m-drawer__head">
+          <span className="m-brand__name">{lang === 'ko' ? '전체 메뉴' : 'Menu'}</span>
+          <button type="button" className="m-iconbtn" aria-label={lang === 'ko' ? '메뉴 닫기' : 'Close menu'} onClick={() => setOpen(false)}>
+            <svg className="m-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg>
+          </button>
+        </div>
+        <div className="m-drawer__body">
+          <nav className="m-drawer__list">
+            {PUBLIC_SECTIONS.map(s => <a key={s.id} href={'#s-' + s.id} onClick={go(s.id)}>{s.label}</a>)}
+          </nav>
+        </div>
+        <div className="m-drawer__foot">
+          <a className="m-lang" href={lang === 'ko' ? 'en/' : '../'}>{lang === 'ko' ? 'English' : '한국어'}</a>
+        </div>
+      </aside>
+    </>
+  );
+}
+
+// ===== Hero Globe (static line drawing) =====
+function HeroGlobe() {
+  const R = 178, N = 8, rot = 0.35;
+  const toRad = d => d * Math.PI / 180;
+  // 서울(37N, 127E)이 앞면에 오도록 중심 경도를 127로 둔 정사도법
+  const lat = toRad(37);
+  const mx = 200, my = 200 - R * Math.sin(lat);
+  return (
+    <svg className="m-globe" viewBox="0 0 400 400" aria-hidden="true">
+      <defs><clipPath id="gc"><circle cx="200" cy="200" r="177"/></clipPath></defs>
       <g clipPath="url(#gc)">
-        <line x1="0" y1="200" x2="400" y2="200" className="gl gl-lat" style={{animationDelay:'0.8s'}}/>
-        <line x1="10" y1="140" x2="390" y2="140" className="gl gl-lat" style={{animationDelay:'1.0s'}}/>
-        <line x1="50" y1="80" x2="350" y2="80" className="gl gl-lat" style={{animationDelay:'1.2s'}}/>
-        <line x1="10" y1="260" x2="390" y2="260" className="gl gl-lat" style={{animationDelay:'1.1s'}}/>
-        <line x1="50" y1="320" x2="350" y2="320" className="gl gl-lat" style={{animationDelay:'1.3s'}}/>
-        {Array.from({length: N}, (_, i) => {
-          const phi = i * Math.PI / (N / 2);
-          return <ellipse key={i} id={'lon' + i} cx="200" cy="200" rx={Math.max(Math.abs(R * Math.cos(phi)), 0.5)} ry={R}
-            className="gl gl-lon" style={{animationDelay: 0.4 + i * 0.1 + 's'}} />;
+        {[-60, -30, 0, 30, 60].map(d => {
+          const y = 200 - R * Math.sin(toRad(d));
+          const hw = R * Math.cos(toRad(d));
+          return <line key={d} x1={200 - hw} y1={y} x2={200 + hw} y2={y} className={d === 0 ? 'm-globe__eq' : ''} />;
+        })}
+        {Array.from({ length: N }, (_, i) => {
+          const phi = i * Math.PI / N + rot;
+          return <ellipse key={i} cx="200" cy="200" rx={Math.max(Math.abs(R * Math.sin(phi)), 0.5)} ry={R} />;
         })}
       </g>
-      <circle id="gm" cx="200" cy="93" r="5" className="gl-marker"/>
-      <circle id="gmp" cx="200" cy="93" r="12" className="gl-pulse"/>
+      <circle cx="200" cy="200" r={R} className="m-globe__outer" />
+      <circle cx={mx} cy={my} r="5" className="m-globe__marker" />
+      <circle cx={mx} cy={my} r="13" className="m-globe__ring" />
     </svg>
   );
 }
 
-// ===== Portfolio Page (Scroll Layout) =====
+function SectionHead({ num, title, aside }) {
+  return (
+    <div className="m-sec-head">
+      <div>
+        <span className="m-eyebrow">{String(num).padStart(2, '0')}</span>
+        <h2 className="m-sec-title">{title}</h2>
+      </div>
+      {aside && <span className="m-source">{aside}</span>}
+    </div>
+  );
+}
+
+function ProjectIcon({ p }) {
+  if (p.icon && p.icon.startsWith('data:')) return <img className="m-appicon" src={p.icon} alt="" />;
+  const ch = (p.name || '?').replace(/^\[[^\]]*\]\s*/, '').trim().charAt(0).toUpperCase();
+  return <span className="m-appicon m-appicon--text" aria-hidden="true">{ch}</span>;
+}
+
+// ===== Post detail (mono) =====
+function PostDetail({ item, onBack, texts }) {
+  const [html, setHtml] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => { window.scrollTo(0, 0); }, []);
+  useEffect(() => {
+    if (!item.file) { setLoading(false); return; }
+    fetch(postsBase + item.file)
+      .then(r => r.text())
+      .then(md => { setHtml(marked.parse(md)); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, [item.file]);
+
+  return (
+    <main className="section m-detail">
+      <div className="wrap wrap--read">
+        <button type="button" className="m-btn m-btn--line m-btn--sm" onClick={onBack}><IconArrowL />{texts.back}</button>
+        <div className="m-detail__head">
+          <span className="m-eyebrow">{item.cat}{item.date ? ', ' + item.date : ''}</span>
+          <h1 className="m-title">{item.title}</h1>
+          {item.desc && <p className="m-lead">{item.desc}</p>}
+          {item.links && item.links.length > 0 && (
+            <div className="m-btns">
+              {item.links.map((link, i) => (
+                <a key={i} className={'m-btn' + (i > 0 ? ' m-btn--line' : '')} href={link.url} target="_blank" rel="noopener noreferrer">{link.label}<IconArrowUR /></a>
+              ))}
+            </div>
+          )}
+          {item.tech && item.tech.length > 0 && (
+            <p className="m-source m-detail__tech">{texts.boardTech}: {item.tech.join(', ')}</p>
+          )}
+        </div>
+        <div className="m-detail__body">
+          {loading
+            ? <p className="m-source">{texts.boardLoading}</p>
+            : <div className="m-prose" dangerouslySetInnerHTML={{ __html: html }} />}
+        </div>
+      </div>
+    </main>
+  );
+}
+
+// ===== Portfolio Page (mono) =====
 function Portfolio({ lang = 'ko' }) {
   const t = TEXTS[lang];
   const posts = usePosts(lang);
   const [selectedPost, setSelectedPost] = useState(null);
+  const scrollY = useRef(0);
 
   const siteData = useSiteData();
   const hero = siteData?.hero ?? DEFAULT_HERO;
@@ -846,155 +967,124 @@ function Portfolio({ lang = 'ko' }) {
   const geoPosts = sortByOrder(posts.filter(p => p.cat === '지리' || p.cat === 'Geography'), geoOrder);
   const notesPosts = sortByOrder(posts.filter(p => p.cat === '글' || p.cat === 'Article'), notesOrder);
 
-  // Scroll reveal
-  useEffect(() => {
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const el = entry.target;
-          const siblings = Array.from(el.parentElement.children).filter(c =>
-            c.classList.contains(el.className.split(' ')[0])
-          );
-          const i = siblings.indexOf(el);
-          setTimeout(() => el.classList.add('visible'), i * 80);
-          observer.unobserve(el);
-        }
-      });
-    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
-
-    document.querySelectorAll('.s-project-card, .s-post-card, .s-stat-card, .s-contact-card, .s-youtube-card, .s-yt-video-card').forEach(el => {
-      observer.observe(el);
-    });
-    return () => observer.disconnect();
-  }, [posts, selectedPost, ytVideos]);
+  const openPost = (item) => { scrollY.current = window.scrollY; setSelectedPost(item); };
+  const closePost = () => { setSelectedPost(null); requestAnimationFrame(() => window.scrollTo(0, scrollY.current)); };
 
   if (selectedPost) {
-    return (
-      <div className="page container" style={{paddingTop:96}}>
-        <BoardDetail item={selectedPost} onBack={() => setSelectedPost(null)} texts={t} />
-      </div>
-    );
+    return <PostDetail item={selectedPost} onBack={closePost} texts={t} />;
   }
 
-  let sectionNum = 1;
+  let n = 1;
+  const descLines = (hero.desc || '').split('\n');
+
+  const PostList = ({ items }) => (
+    <ul className="m-list">
+      {items.map(item => (
+        <li key={item.id}>
+          <div className="m-list__main">
+            <button type="button" className="m-list__title m-list__btn" onClick={() => openPost(item)}>{item.title}</button>
+            {item.desc && <span className="m-list__desc m-clamp-2">{item.desc}</span>}
+          </div>
+          <span className="m-list__meta">{item.date}</span>
+        </li>
+      ))}
+    </ul>
+  );
 
   return (
-    <div className="portfolio-scroll">
+    <main className="m-home">
       {/* Hero */}
-      <section className="s-hero">
-        <HeroGlobe />
-        <div className="container s-hero-content">
-          <div className="s-hero-label">{hero.label}</div>
-          <h1 className="s-hero-name">{hero.name}</h1>
-          <p className="s-hero-name-sub">{hero.nameSub}</p>
-          <p className="s-hero-desc">{hero.desc.split('\n').map((line, i) =>
-            <React.Fragment key={i}>{line}{i < hero.desc.split('\n').length - 1 && <br/>}</React.Fragment>
-          )}</p>
-          <div className="s-hero-tags">
-            {hero.tags.map((tag, i) => <span key={i} className="s-hero-tag">{tag}</span>)}
+      <section className="hero">
+        <div className="wrap m-hero-grid">
+          <div>
+            <span className="m-eyebrow">{noDot(hero.label)}</span>
+            <h1 className="m-hero-title">{hero.name}</h1>
+            <p className="m-hero-sub">{hero.nameSub}</p>
+            <p className="m-lead">{descLines.map((line, i) =>
+              <React.Fragment key={i}>{noDot(line)}{i < descLines.length - 1 && <br />}</React.Fragment>
+            )}</p>
+            {hero.tags && hero.tags.length > 0 && (
+              <div className="m-inline-wrap"><ul className="m-inline-list">
+                {hero.tags.map((tag, i) => <li key={i}>{noDot(tag)}</li>)}
+              </ul></div>
+            )}
+            <div className="m-btns">
+              <a className="m-btn" href="#s-lab" onClick={scrollToSection('lab')}>{t.heroLab}<IconArrowR /></a>
+              <a className="m-btn m-btn--line" href="#s-contact" onClick={scrollToSection('contact')}>{t.heroContact}</a>
+            </div>
           </div>
+          <HeroGlobe />
         </div>
       </section>
 
-      {/* 01 Bio */}
-      <section className="s-section" id="s-bio">
-        <div className="container">
-          <div className="s-section-header">
-            <span className="s-section-num">0{sectionNum++}</span>
-            <h2 className="s-section-title"><span className="tab-initial">B</span>iography</h2>
-            <div className="s-section-line" />
-          </div>
-          <div className="s-about-content">
-            <div className="s-about-text">
-              {bio.paragraphs.map((p, i) => <p key={i}>{p}</p>)}
+      {/* Bio */}
+      <section className="section section--line" id="s-bio">
+        <div className="wrap">
+          <SectionHead num={n++} title="Biography" />
+          <div className="m-grid-2">
+            <div className="m-bio-text">
+              {bio.paragraphs.map((p, i) => <p key={i}>{noDot(p)}</p>)}
             </div>
-            <div className="s-about-stats">
+            <div className="m-stats">
               {bio.stats.map((s, i) => (
-                <div key={i} className="s-stat-card"><div className="s-stat-number">{s.number}</div><div className="s-stat-label">{s.label}</div></div>
+                <div key={i} className="m-stat">
+                  <div className={'m-num' + (/^[\d+.,%\s]+$/.test(s.number) ? '' : ' m-num--text')}>{noDot(s.number)}</div>
+                  <div className="m-card__desc">{noDot(s.label)}</div>
+                </div>
               ))}
             </div>
           </div>
           {bio.timeline && bio.timeline.length > 0 && (
-            <div className="s-timeline mt-lg">
-              {bio.timeline.map((item, i) => (
-                <div key={i} className="s-timeline-item">
-                  <div className="s-timeline-date">{item.date}</div>
-                  <div className="s-timeline-dot" />
-                  <div className="s-timeline-body">
-                    <div className="s-timeline-title">{item.title}</div>
-                    <div className="s-timeline-desc">{item.desc}</div>
-                  </div>
-                </div>
-              ))}
+            <div className="m-timeline">
+              <h3 className="m-label">{t.timeline}</h3>
+              <ul className="m-list">
+                {bio.timeline.map((item, i) => (
+                  <li key={i}>
+                    <span className="m-list__date">{rangeText(item.date)}</span>
+                    <div className="m-list__main">
+                      <span className="m-list__title">{noDot(item.title)}</span>
+                      {item.desc && <span className="m-list__desc">{noDot(item.desc)}</span>}
+                    </div>
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
         </div>
       </section>
 
-      {/* 02 Geo (if posts exist) */}
       {geoPosts.length > 0 && (
-        <section className="s-section" id="s-geo">
-          <div className="container">
-            <div className="s-section-header">
-              <span className="s-section-num">0{sectionNum++}</span>
-              <h2 className="s-section-title"><span className="tab-initial">G</span>eography</h2>
-              <div className="s-section-line" />
-            </div>
-            <div className="s-projects-grid">
-              {geoPosts.map(item => (
-                <div key={item.id} className="s-post-card" onClick={() => setSelectedPost(item)}>
-                  <div className="s-card-header-row"><div className="s-project-icon">🌍</div><h3 className="s-project-name">{item.title}</h3></div>
-                  <p className="s-project-desc">{item.desc}</p>
-                  {item.tech && item.tech.length > 0 && (
-                    <div className="s-project-tech">{item.tech.map(t => <span key={t}>{t}</span>)}</div>
-                  )}
-                  <div className="s-project-date">{item.date}</div>
-                </div>
-              ))}
-            </div>
+        <section className="section section--line" id="s-geo">
+          <div className="wrap">
+            <SectionHead num={n++} title="Geography" aside={geoPosts.length + t.countUnit} />
+            <PostList items={geoPosts} />
           </div>
         </section>
       )}
 
-      {/* 03 Notes (if posts exist) */}
       {notesPosts.length > 0 && (
-        <section className="s-section" id="s-notes">
-          <div className="container">
-            <div className="s-section-header">
-              <span className="s-section-num">0{sectionNum++}</span>
-              <h2 className="s-section-title"><span className="tab-initial">N</span>otes</h2>
-              <div className="s-section-line" />
-            </div>
-            <div className="s-projects-grid">
-              {notesPosts.map(item => (
-                <div key={item.id} className="s-post-card" onClick={() => setSelectedPost(item)}>
-                  <div className="s-card-header-row"><div className="s-project-icon">📝</div><h3 className="s-project-name">{item.title}</h3></div>
-                  <p className="s-project-desc">{item.desc}</p>
-                  <div className="s-project-date">{item.date}</div>
-                </div>
-              ))}
-            </div>
+        <section className="section section--line" id="s-notes">
+          <div className="wrap">
+            <SectionHead num={n++} title="Notes" aside={notesPosts.length + t.countUnit} />
+            <PostList items={notesPosts} />
           </div>
         </section>
       )}
 
-      {/* 04 Labs */}
-      <section className="s-section" id="s-lab">
-        <div className="container">
-          <div className="s-section-header">
-            <span className="s-section-num">0{sectionNum++}</span>
-            <h2 className="s-section-title"><span className="tab-initial">L</span>aboratory</h2>
-            <div className="s-section-line" />
-          </div>
-          <div className="s-projects-grid">
+      {/* Lab */}
+      <section className="section section--line" id="s-lab">
+        <div className="wrap">
+          <SectionHead num={n++} title="Laboratory" aside={projects.length + t.countUnit} />
+          <div className="m-grid-3 m-lab">
             {projects.map((p, i) => (
-              <a key={i} href={p.url} target="_blank" rel="noopener noreferrer" className="s-project-card" style={{borderBottom:'none'}}>
-                <span className="s-project-arrow">↗</span>
-                <div className="s-card-header-row"><div className="s-project-icon">{p.icon?.startsWith('data:') ? <img src={p.icon} alt="" style={{width:24,height:24,objectFit:'contain'}} /> : p.icon}</div><h3 className="s-project-name">{p.name}</h3></div>
-                <p className="s-project-desc">{p.desc}</p>
-                <div className="s-project-tech">
-                  {p.tech.map(t => <span key={t}>{t}</span>)}
+              <a key={i} href={p.url} target="_blank" rel="noopener noreferrer" className="m-card m-card--link">
+                <div className="m-card__top">
+                  <ProjectIcon p={p} />
+                  <span className="m-card__arrow"><IconArrowUR /></span>
                 </div>
+                <h3 className="m-card__title">{p.name}</h3>
+                <p className="m-card__desc m-clamp-3">{noDot(p.desc)}</p>
+                {p.tech && p.tech.length > 0 && <p className="m-source m-card__tech">{p.tech.map(noDot).join(', ')}</p>}
               </a>
             ))}
           </div>
@@ -1002,32 +1092,24 @@ function Portfolio({ lang = 'ko' }) {
       </section>
 
       {/* YouTube */}
-      <section className="s-section" id="s-youtube">
-        <div className="container">
-          <div className="s-section-header">
-            <span className="s-section-num">0{sectionNum++}</span>
-            <h2 className="s-section-title">YouTube</h2>
-            <div className="s-section-line" />
-          </div>
-          <div className="s-youtube-card">
-            <div className="s-yt-icon">▶</div>
-            <div className="s-yt-info">
-              <h3 className="s-yt-name">{youtube.name}</h3>
-              <p className="s-yt-handle">{youtube.handle}</p>
-              <p className="s-yt-desc">{youtube.desc}</p>
-              <a href={youtube.url} target="_blank" rel="noopener noreferrer" className="s-yt-link">채널 방문하기 →</a>
+      <section className="section section--line" id="s-youtube">
+        <div className="wrap">
+          <SectionHead num={n++} title="YouTube" />
+          <div className="m-yt">
+            <div>
+              <p className="t-24 m-yt__name">{youtube.name}</p>
+              <p className="m-source">{youtube.handle}</p>
             </div>
+            <p className="m-yt__desc">{noDot(youtube.desc)}</p>
+            <a href={youtube.url} target="_blank" rel="noopener noreferrer" className="m-btn m-btn--line">{t.ytVisit}<IconArrowUR /></a>
           </div>
           {ytVideos.length > 0 && (
-            <div className="s-projects-grid" style={{marginTop:'2rem'}}>
+            <div className="m-grid-3 m-videos">
               {ytVideos.map(v => (
-                <a key={v.videoId} href={`https://www.youtube.com/watch?v=${v.videoId}`} target="_blank" rel="noopener noreferrer" className="s-post-card s-yt-video-card" style={{textDecoration:'none',color:'inherit',borderBottom:'none'}}>
-                  <div className="s-yt-thumb-wrap">
-                    <img src={v.thumb} alt={v.title} className="s-yt-thumb" />
-                    <div className="s-yt-play-overlay">▶</div>
-                  </div>
-                  <h3 className="s-project-name" style={{marginTop:'0.75rem'}}>{v.title}</h3>
-                  <div className="s-project-date">{new Date(v.published).toLocaleDateString('ko-KR')}</div>
+                <a key={v.videoId} href={`https://www.youtube.com/watch?v=${v.videoId}`} target="_blank" rel="noopener noreferrer" className="m-video">
+                  <span className="m-video__thumb"><img src={v.thumb} alt="" loading="lazy" /></span>
+                  <span className="m-card__title">{v.title}</span>
+                  <span className="m-source">{new Date(v.published).toLocaleDateString(lang === 'ko' ? 'ko-KR' : 'en-US')}</span>
                 </a>
               ))}
             </div>
@@ -1036,26 +1118,26 @@ function Portfolio({ lang = 'ko' }) {
       </section>
 
       {/* Contact */}
-      <section className="s-section" id="s-contact">
-        <div className="container">
-          <div className="s-section-header">
-            <span className="s-section-num">0{sectionNum++}</span>
-            <h2 className="s-section-title">Contact</h2>
-            <div className="s-section-line" />
-          </div>
-          <div className="s-contact-grid">
+      <section className="section section--line" id="s-contact">
+        <div className="wrap">
+          <SectionHead num={n++} title="Contact" />
+          <ul className="m-list m-contact">
             {contacts.map((c, i) => (
-              <a key={i} href={c.url} target={c.url.startsWith('mailto')?undefined:'_blank'} rel="noopener noreferrer" className="s-contact-card" style={{borderBottom:'none'}}>
-                <div className="s-contact-icon">{c.icon}</div>
-                <div><div className="s-contact-label">{c.label}</div><div className="s-contact-value">{c.value}</div></div>
-              </a>
+              <li key={i}>
+                <span className="m-list__date">{c.label}</span>
+                <div className="m-list__main">
+                  <a className="m-list__title" href={c.url} target={c.url.startsWith('mailto') ? undefined : '_blank'} rel="noopener noreferrer">{c.value}</a>
+                </div>
+                <span className="m-list__meta" aria-hidden="true"><IconArrowUR /></span>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       </section>
-    </div>
+    </main>
   );
 }
+
 
 // ===== Tools: Pomodoro (Circular + Customizable) =====
 function PomodoroTimer() {
@@ -2534,12 +2616,38 @@ function MainPageEditor() {
 }
 
 // ===== Footer =====
-function Footer({ lang = 'ko' }) {
+function Footer({ lang = 'ko', visitorCounts }) {
+  const siteData = useSiteData();
+  const posts = usePosts(lang);
+  const contacts = siteData?.contacts ?? DEFAULT_CONTACTS;
+  const projects = siteData?.projects ?? DEFAULT_PROJECTS;
+  const notes = posts.filter(p => p.cat === '글' || p.cat === 'Article').length;
+  const vc = visitorCounts || { today: 0, total: 0 };
   return (
-    <footer className="footer" style={{textAlign:'center'}}>
-      <div className="container">
-        <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:'12px',flexWrap:'nowrap'}}>
-          <p className="footer-copy" style={{margin:0}}>&copy; 2026 Yonghyun Kim. All rights reserved.</p>
+    <footer className="m-footer">
+      <div className="wrap">
+        <div className="m-footer__top">
+          <div>
+            <p className="m-footer__brand">BGNL.kr</p>
+            <p className="m-footer__desc">
+              {lang === 'ko' ? '김용현, 양정고등학교 지리교사' : 'Yonghyun Kim, geography teacher'}<br />
+              {lang === 'ko' ? '교실에서 생긴 질문을 도구로 답합니다.' : 'Answering classroom questions with tools.'}
+            </p>
+          </div>
+          <nav className="m-footer__links" aria-label={lang === 'ko' ? '연락처' : 'Contact'}>
+            {contacts.map((c, i) => (
+              <a key={i} href={c.url} target={c.url.startsWith('mailto') ? undefined : '_blank'} rel="noopener noreferrer">{c.label}</a>
+            ))}
+          </nav>
+        </div>
+        <dl className="m-footer__grid">
+          <div><dt>Today</dt><dd>{Number(vc.today).toLocaleString()}</dd></div>
+          <div><dt>Total</dt><dd>{Number(vc.total).toLocaleString()}</dd></div>
+          <div><dt>Lab</dt><dd>{projects.length}</dd></div>
+          <div><dt>Notes</dt><dd>{notes}</dd></div>
+        </dl>
+        <div className="m-footer__copy m-footer__copyrow">
+          <p>&copy; 2026 Yonghyun Kim. All rights reserved.</p>
           <div data-bgnl-family=""></div>
         </div>
       </div>
@@ -2552,7 +2660,7 @@ function App() {
   const lang = window.HUB_LANG || 'ko';
   const [section, setSection] = useState('public');
   const [page, setPage] = useState('portfolio');
-  const [dark, setDark] = useState(() => ls.get('dark', false));
+  const [dark, setDark] = useState(() => ls.get('dark', !!(window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches)));
   const visitorCounts = useVisitorCount();
 
   useEffect(() => {
@@ -2612,10 +2720,14 @@ function App() {
 
   return (
     <>
-      <Nav page={page} setPage={setPage} dark={dark} setDark={setDark} section={section} setSection={setSection} lang={lang} visitorCounts={visitorCounts} />
+      {section === 'public'
+        ? <PublicHeader dark={dark} setDark={setDark} lang={lang} />
+        : <Nav page={page} setPage={setPage} dark={dark} setDark={setDark} section={section} setSection={setSection} lang={lang} visitorCounts={visitorCounts} />}
       {renderPage()}
-      <Footer lang={lang} />
-      <button className={`top-btn${showTop ? ' visible' : ''}`} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} aria-label="Top">↑</button>
+      <Footer lang={lang} visitorCounts={visitorCounts} />
+      <button className={`top-btn${showTop ? ' visible' : ''}`} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} aria-label="Top">
+        <svg className="m-icon m-icon--sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20V4M6 10l6-6 6 6"/></svg>
+      </button>
     </>
   );
 }
