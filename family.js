@@ -34,7 +34,7 @@
     '.bgnl-fam__btn svg{width:11px;height:11px;flex:none;transition:transform .15s}',
     '.bgnl-fam[data-open] .bgnl-fam__btn svg{transform:rotate(180deg)}',
     '.bgnl-fam__list{position:absolute;left:0;bottom:calc(100% + 6px);z-index:2147483000;min-width:240px;max-width:calc(100vw - 32px);',
-    'max-height:min(420px,70vh);overflow:auto;margin:0;padding:6px;list-style:none;border:1px solid rgba(127,127,127,.35);',
+    'max-height:min(500px,70vh);overflow:auto;margin:0;padding:6px;list-style:none;border:1px solid rgba(127,127,127,.35);',
     'border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.18)}',
     '.bgnl-fam[data-down] .bgnl-fam__list{bottom:auto;top:calc(100% + 6px)}',
     '.bgnl-fam[data-right] .bgnl-fam__list{left:auto;right:0}',
