@@ -26,7 +26,7 @@
 
   var STYLE_ID = 'bgnl-family-style';
   var CSS = [
-    '.bgnl-fam{position:relative;display:inline-block;font:inherit;color:inherit;text-align:left;line-height:1.4}',
+    '.bgnl-fam{position:relative;display:inline-block;font:inherit;color:inherit;text-align:left;line-height:1.4;overflow-wrap:normal;word-break:keep-all;letter-spacing:normal;text-transform:none}',
     '.bgnl-fam__btn{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;font:inherit;font-size:14px;color:inherit;',
     'background:transparent;border:1px solid rgba(127,127,127,.4);border-radius:8px;cursor:pointer}',
     '.bgnl-fam__btn:hover{border-color:rgba(127,127,127,.8)}',
@@ -40,7 +40,7 @@
     '.bgnl-fam[data-right] .bgnl-fam__list{left:auto;right:0}',
     '.bgnl-fam__list[hidden]{display:none}',
     '.bgnl-fam__item{margin:0;padding:0}',
-    '.bgnl-fam__link{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:44px;padding:0 12px;',
+    '.bgnl-fam__link{white-space:nowrap;display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:44px;padding:0 12px;',
     'border-radius:6px;color:inherit;text-decoration:none;font-size:14px}',
     '.bgnl-fam__link:hover,.bgnl-fam__link:focus-visible{background:rgba(127,127,127,.14);outline:none}',
     '.bgnl-fam__host{font-size:12px;opacity:.6;white-space:nowrap}',
