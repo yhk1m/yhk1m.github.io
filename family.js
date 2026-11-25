@@ -118,7 +118,7 @@
     var bgRgb = rgbOf(bg) || [255, 255, 255];
     var dark = luminance(bgRgb) < 0.4;
     var rootStyle = getComputedStyle(document.documentElement);
-    var names = ['--accent', '--color-accent', '--accent-color', '--primary', '--color-primary', '--brand', '--brand-color'];
+    var names = ['--bgnl-fam-accent', '--accent', '--color-primary', '--primary', '--color-accent', '--accent-color', '--brand', '--brand-color'];
     for (var i = 0; i < names.length; i++) {
       var v = rootStyle.getPropertyValue(names[i]).trim();
       if (!v) continue;
