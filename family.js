@@ -21,6 +21,7 @@
     { name: 'LocFinder', url: 'https://locfinder.bgnl.kr' },
     { name: 'GeoShelf', url: 'https://geoshelf.kr' },
     { name: 'SpaceArchive', url: 'https://yhk1m.github.io/space-archive/' },
+    { name: '2028 권장 과목', url: 'https://subjects.bgnl.kr' },
     { name: 'bgnl.kr', url: 'https://bgnl.kr' }
   ];
 
